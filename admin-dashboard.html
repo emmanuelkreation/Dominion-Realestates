@@ -138,6 +138,15 @@
     <div class="stat"><div class="num" id="statClicks">–</div><div class="lab">"Purchase" clicks tracked</div></div>
   </div>
 
+  <div class="section-nav" id="sectionNav">
+    <button class="active" data-section="conversations"><i class="fas fa-comments"></i> Conversations <span class="count" id="navCountConversations">0</span></button>
+    <button data-section="pending"><i class="fas fa-user-clock"></i> Seller approval queue <span class="count" id="navCountPending">0</span></button>
+    <button data-section="sellers"><i class="fas fa-store"></i> All sellers <span class="count" id="navCountSellers">0</span></button>
+    <button data-section="sales"><i class="fas fa-handshake"></i> Completed sales <span class="count" id="navCountSales">0</span></button>
+    <button data-section="properties"><i class="fas fa-house"></i> Properties <span class="count" id="navCountProperties">0</span></button>
+  </div>
+
+  <section class="section-panel active" id="panel-conversations">
   <h2 class="section">
     Conversations
     <button class="btn btn-brass" id="newAdminMsgBtn"><i class="fas fa-comment-medical"></i> Message a user</button>
@@ -150,13 +159,17 @@
     <thead><tr><th>Buyer</th><th>Seller</th><th>Property</th><th>Last message</th><th>Updated</th></tr></thead>
     <tbody id="conversationsBody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
   </table>
+  </section>
 
+  <section class="section-panel" id="panel-pending">
   <h2 class="section">Seller approval queue</h2>
   <table>
     <thead><tr><th>Name</th><th>Email</th><th>Applied</th><th>Actions</th></tr></thead>
     <tbody id="pendingBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
   </table>
+  </section>
 
+  <section class="section-panel" id="panel-sellers">
   <h2 class="section">All sellers</h2>
   <div class="tabs" id="sellerTabs">
     <button class="active" data-filter="all">All</button>
@@ -169,7 +182,9 @@
     <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody id="sellersBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
   </table>
+  </section>
 
+  <section class="section-panel" id="panel-sales">
   <h2 class="section">Completed sales</h2>
   <p style="font-size:.82rem; color:var(--ink-soft); margin-bottom:1rem; max-width:640px;">
     Until Stripe payments are live, confirm a sale manually once money has actually changed hands outside the platform. This creates the transaction record buyers need to leave a review — it does not move any money itself.
@@ -178,12 +193,15 @@
     <thead><tr><th>Property</th><th>Buyer</th><th>Seller</th><th>Accepted amount</th><th>Action</th></tr></thead>
     <tbody id="salesBody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
   </table>
+  </section>
 
+  <section class="section-panel" id="panel-properties">
   <h2 class="section">Properties</h2>
   <table>
     <thead><tr><th>Address / location</th><th>Price</th><th>Seller</th><th>Status</th></tr></thead>
     <tbody id="propertiesBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
   </table>
+  </section>
 
   <footer></footer>
 </div>
@@ -275,6 +293,7 @@
     const pendingBody = document.getElementById('pendingBody');
     const pending = Object.entries(allUsers).filter(([, u]) => u.role === 'seller' && u.status === 'pending');
     document.getElementById('statPending').textContent = pending.length;
+    document.getElementById('navCountPending').textContent = pending.length;
     if (!pending.length) {
       pendingBody.innerHTML = '<tr class="empty-row"><td colspan="4">No sellers waiting on review.</td></tr>';
       return;
@@ -303,6 +322,7 @@
     let sellers = Object.entries(allUsers).filter(([, u]) => u.role === 'seller');
     document.getElementById('statSellers').textContent = sellers.filter(([, u]) => u.status === 'approved').length;
     document.getElementById('statBuyers').textContent = Object.values(allUsers).filter(u => u.role === 'buyer').length;
+    document.getElementById('navCountSellers').textContent = sellers.length;
     if (sellerFilter !== 'all') sellers = sellers.filter(([, u]) => u.status === sellerFilter);
     if (!sellers.length) {
       sellersBody.innerHTML = '<tr class="empty-row"><td colspan="4">No sellers in this category.</td></tr>';
@@ -327,6 +347,15 @@
     });
   }
 
+  document.getElementById('sectionNav').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-section]');
+    if (!btn) return;
+    document.querySelectorAll('#sectionNav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`panel-${btn.dataset.section}`).classList.add('active');
+  });
+
   document.getElementById('sellerTabs').addEventListener('click', (e) => {
     if (e.target.tagName !== 'BUTTON') return;
     document.querySelectorAll('#sellerTabs button').forEach(b => b.classList.remove('active'));
@@ -349,6 +378,7 @@
       allProperties = snap.exists() ? snap.val() : {};
       const properties = Object.values(allProperties);
       document.getElementById('statProperties').textContent = properties.length;
+      document.getElementById('navCountProperties').textContent = properties.length;
       if (!properties.length) {
         propertiesBody.innerHTML = '<tr class="empty-row"><td colspan="4">No properties posted yet.</td></tr>';
       } else {
@@ -380,6 +410,7 @@
     const salesBody = document.getElementById('salesBody');
     const confirmedOfferIds = new Set(Object.values(allTransactions).map(t => t.offerId));
     const pending = Object.entries(allOffers).filter(([id, o]) => o.status === 'accepted' && !confirmedOfferIds.has(id));
+    document.getElementById('navCountSales').textContent = pending.length;
     if (!pending.length) {
       salesBody.innerHTML = '<tr class="empty-row"><td colspan="5">No accepted offers waiting on confirmation.</td></tr>';
       return;
@@ -448,6 +479,7 @@
   function renderConversations() {
     const body = document.getElementById('conversationsBody');
     const entries = Object.entries(allChats).sort((a, b) => (b[1].lastUpdated || 0) - (a[1].lastUpdated || 0));
+    document.getElementById('navCountConversations').textContent = entries.length;
     if (!entries.length) {
       body.innerHTML = '<tr class="empty-row"><td colspan="5">No conversations yet.</td></tr>';
       return;
