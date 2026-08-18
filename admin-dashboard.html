@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin dashboard — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#F3F1E9; --ink-soft:#B7BDB4; --paper:#101A15; --paper-raise:#16241E;
+    --line:#2B372F; --brass:#D3B27C; --emerald:#6FA98C; --emerald-tint:#1B2A22;
+    --red:#E7897E; --red-tint:#3A1E1B; --amber:#E3C27A; --amber-tint:#332C1C;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink);}
+  .container{max-width:1180px; margin:0 auto; padding:0 24px;}
+  a{color:inherit;}
+
+  .topbar{border-bottom:1px solid var(--line); padding:1.1rem 0;}
+  .topbar .container{display:flex; justify-content:space-between; align-items:center;}
+  .mark{font-family:var(--mono); font-size:.68rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .brand{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.2rem;}
+  .logout{background:none; border:1px solid var(--line); color:var(--ink); padding:.5rem 1.1rem; border-radius:100px; cursor:pointer; font-size:.85rem;}
+  .logout:hover{border-color:var(--brass);}
+
+  .stats-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin:2rem 0;}
+  .stat{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.3rem;}
+  .stat .num{font-family:var(--mono); font-size:1.8rem; font-weight:600;}
+  .stat .lab{font-size:.78rem; color:var(--ink-soft); margin-top:.2rem;}
+
+  h2.section{font-family:var(--display); font-weight:500; font-size:1.3rem; margin:2.2rem 0 1rem; display:flex; align-items:center; gap:.7rem; justify-content:space-between;}
+  .tabs{display:flex; gap:.5rem; margin-bottom:1.2rem; flex-wrap:wrap;}
+  .tabs button{
+    background:var(--paper-raise); border:1px solid var(--line); color:var(--ink-soft);
+    padding:.5rem 1.1rem; border-radius:100px; cursor:pointer; font-size:.84rem; font-weight:600;
+  }
+  .tabs button.active{background:var(--brass); color:#241C0F; border-color:var(--brass);}
+
+  .btn{border:none; border-radius:100px; padding:.5rem 1.2rem; font-size:.82rem; font-weight:600; cursor:pointer;}
+  .btn-brass{background:var(--brass); color:#241C0F;}
+  .btn-outline{background:none; border:1px solid var(--line); color:var(--ink);}
+  .btn-outline:hover{border-color:var(--brass);}
+
+  table{width:100%; border-collapse:collapse; background:var(--paper-raise); border:1px solid var(--line); border-radius:14px; overflow:hidden;}
+  th, td{text-align:left; padding:.9rem 1rem; font-size:.86rem; border-bottom:1px solid var(--line);}
+  th{font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:500;}
+  tr:last-child td{border-bottom:none;}
+  tr.clickable{cursor:pointer;}
+  tr.clickable:hover{background:rgba(255,255,255,.03);}
+  .pill{font-family:var(--mono); font-size:.68rem; padding:.25rem .7rem; border-radius:100px; text-transform:uppercase; letter-spacing:.04em;}
+  .pill.pending{background:var(--amber-tint); color:var(--amber);}
+  .pill.approved{background:var(--emerald-tint); color:var(--emerald);}
+  .pill.rejected, .pill.suspended{background:var(--red-tint); color:var(--red);}
+  .unread-dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--brass); margin-right:.5rem;}
+  .row-actions{display:flex; gap:.5rem;}
+  .row-actions button{
+    border:none; border-radius:8px; padding:.4rem .8rem; font-size:.78rem; font-weight:600; cursor:pointer;
+  }
+  .btn-approve{background:var(--emerald-tint); color:var(--emerald);}
+  .btn-reject{background:var(--red-tint); color:var(--red);}
+  .btn-suspend{background:var(--amber-tint); color:var(--amber);}
+  .empty-row td{text-align:center; color:var(--ink-soft); padding:2rem;}
+  footer{height:3rem;}
+
+  /* Section nav — one panel visible at a time instead of one long scroll */
+  .section-nav{display:flex; gap:.6rem; flex-wrap:wrap; margin:2.2rem 0 1.6rem; border-bottom:1px solid var(--line); padding-bottom:1.4rem;}
+  .section-nav button{
+    background:var(--paper-raise); border:1px solid var(--line); color:var(--ink-soft);
+    padding:.65rem 1.3rem; border-radius:100px; cursor:pointer; font-size:.86rem; font-weight:600;
+    display:flex; align-items:center; gap:.5rem;
+  }
+  .section-nav button:hover{border-color:var(--brass);}
+  .section-nav button.active{background:var(--brass); color:#241C0F; border-color:var(--brass);}
+  .section-nav button .count{
+    font-family:var(--mono); font-size:.7rem; background:rgba(255,255,255,.12); padding:.1rem .5rem; border-radius:100px;
+  }
+  .section-nav button.active .count{background:rgba(0,0,0,.15);}
+  .section-panel{display:none;}
+  .section-panel.active{display:block;}
+
+  /* User search for "message a user" */
+  .user-search{display:flex; gap:.6rem; margin-bottom:1rem;}
+  .user-search input{
+    flex:1; padding:.7rem 1rem; border:1.5px solid var(--line); border-radius:10px;
+    background:var(--paper); color:var(--ink); font-family:var(--body); outline:none;
+  }
+  .user-search input:focus{border-color:var(--brass);}
+
+  /* Modal thread viewer */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:500;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    background:var(--paper-raise); border:1px solid var(--line); border-radius:18px;
+    width:100%; max-width:620px; height:78vh; display:flex; flex-direction:column; overflow:hidden;
+  }
+  .modal-head{padding:1.1rem 1.4rem; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; flex-shrink:0;}
+  .modal-head .who{font-weight:700; font-size:.95rem;}
+  .modal-head .sub{font-size:.78rem; color:var(--ink-soft); margin-top:.15rem;}
+  .modal-close{background:none; border:none; color:var(--ink-soft); font-size:1.2rem; cursor:pointer;}
+  .modal-close:hover{color:var(--ink);}
+  .modal-messages{flex:1; min-height:0; overflow-y:auto; padding:1.1rem 1.4rem; display:flex; flex-direction:column; gap:.6rem;}
+  .m-bubble{max-width:75%; padding:.6rem .9rem; border-radius:12px; font-size:.86rem; line-height:1.4;}
+  .m-bubble.admin{align-self:flex-end; background:var(--brass); color:#241C0F; border-bottom-right-radius:3px;}
+  .m-bubble.other{align-self:flex-start; background:var(--paper); border:1px solid var(--line); border-bottom-left-radius:3px;}
+  .m-bubble .who-label{font-family:var(--mono); font-size:.62rem; opacity:.7; display:block; margin-bottom:.2rem; text-transform:uppercase;}
+  .m-bubble .time{display:block; font-size:.62rem; opacity:.6; margin-top:.25rem;}
+  .modal-composer{border-top:1px solid var(--line); padding:1rem 1.4rem; display:flex; gap:.6rem; flex-shrink:0;}
+  .modal-composer input{
+    flex:1; padding:.7rem 1rem; border:1.5px solid var(--line); border-radius:100px;
+    background:var(--paper); color:var(--ink); font-family:var(--body); outline:none;
+  }
+  .modal-composer input:focus{border-color:var(--brass);}
+  .modal-composer button{background:var(--brass); color:#241C0F; border:none; border-radius:100px; padding:0 1.2rem; font-weight:700; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <div><span class="mark">Admin</span><div class="brand">Dominion Home Hub</div></div>
+    <button class="logout" id="logoutBtn"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats-row" id="statsRow">
+    <div class="stat"><div class="num" id="statPending">–</div><div class="lab">Pending sellers</div></div>
+    <div class="stat"><div class="num" id="statSellers">–</div><div class="lab">Approved sellers</div></div>
+    <div class="stat"><div class="num" id="statBuyers">–</div><div class="lab">Buyers</div></div>
+    <div class="stat"><div class="num" id="statProperties">–</div><div class="lab">Live properties</div></div>
+    <div class="stat"><div class="num" id="statViews">–</div><div class="lab">Property views tracked</div></div>
+    <div class="stat"><div class="num" id="statClicks">–</div><div class="lab">"Purchase" clicks tracked</div></div>
+  </div>
+
+  <h2 class="section">
+    Conversations
+    <button class="btn btn-brass" id="newAdminMsgBtn"><i class="fas fa-comment-medical"></i> Message a user</button>
+  </h2>
+  <p style="font-size:.82rem; color:var(--ink-soft); margin-bottom:1rem; max-width:640px;">
+    Every buyer/seller conversation on the platform, for reviewing before confirming a sale or checking for anything
+    that looks like fraud. Click any row to read the full thread — you can also reply directly from here.
+  </p>
+  <table>
+    <thead><tr><th>Buyer</th><th>Seller</th><th>Property</th><th>Last message</th><th>Updated</th></tr></thead>
+    <tbody id="conversationsBody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+  </table>
+
+  <h2 class="section">Seller approval queue</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Email</th><th>Applied</th><th>Actions</th></tr></thead>
+    <tbody id="pendingBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+  </table>
+
+  <h2 class="section">All sellers</h2>
+  <div class="tabs" id="sellerTabs">
+    <button class="active" data-filter="all">All</button>
+    <button data-filter="approved">Approved</button>
+    <button data-filter="pending">Pending</button>
+    <button data-filter="rejected">Rejected</button>
+    <button data-filter="suspended">Suspended</button>
+  </div>
+  <table>
+    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="sellersBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+  </table>
+
+  <h2 class="section">Completed sales</h2>
+  <p style="font-size:.82rem; color:var(--ink-soft); margin-bottom:1rem; max-width:640px;">
+    Until Stripe payments are live, confirm a sale manually once money has actually changed hands outside the platform. This creates the transaction record buyers need to leave a review — it does not move any money itself.
+  </p>
+  <table>
+    <thead><tr><th>Property</th><th>Buyer</th><th>Seller</th><th>Accepted amount</th><th>Action</th></tr></thead>
+    <tbody id="salesBody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+  </table>
+
+  <h2 class="section">Properties</h2>
+  <table>
+    <thead><tr><th>Address / location</th><th>Price</th><th>Seller</th><th>Status</th></tr></thead>
+    <tbody id="propertiesBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+  </table>
+
+  <footer></footer>
+</div>
+
+<!-- Thread viewer / composer modal, shared by both "click a conversation" and "message a user" -->
+<div class="modal-overlay" id="threadModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="who" id="threadWho">—</div>
+        <div class="sub" id="threadSub">—</div>
+      </div>
+      <button class="modal-close" id="threadCloseBtn"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-messages" id="threadMessages"></div>
+    <form class="modal-composer" id="threadComposer">
+      <input type="text" id="threadInput" placeholder="Type a message as Dominion Home Hub Support…" autocomplete="off" required>
+      <button type="submit"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<!-- "Message a user" picker -->
+<div class="modal-overlay" id="userPickerModal">
+  <div class="modal-card" style="height:60vh;">
+    <div class="modal-head">
+      <div class="who">Message a user</div>
+      <button class="modal-close" id="userPickerCloseBtn"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div style="padding:1.1rem 1.4rem 0;">
+      <div class="user-search"><input type="text" id="userSearchInput" placeholder="Search by name or email…"></div>
+    </div>
+    <div class="modal-messages" id="userPickerList" style="gap:0; padding-top:.4rem;"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, update, onValue, onChildAdded, push, set } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const ADMIN_DISPLAY_NAME = 'Dominion Home Hub Support';
+
+  let currentAdmin = null;
+  let allUsers = {};
+  let sellerFilter = 'all';
+  let allProperties = {};
+  let allOffers = {};
+  let allTransactions = {};
+  let allChats = {};
+  const PLATFORM_FEE_RATE = 0.05; // 5% — adjust to your actual fee
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price || 0);
+  }
+  function formatDate(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+    catch { return '—'; }
+  }
+  function formatTime(ts) {
+    if (!ts) return '';
+    return new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+  }
+
+  async function setSellerStatus(uid, status) {
+    await update(ref(db, `users/${uid}`), { status });
+  }
+
+  function renderPending() {
+    const pendingBody = document.getElementById('pendingBody');
+    const pending = Object.entries(allUsers).filter(([, u]) => u.role === 'seller' && u.status === 'pending');
+    document.getElementById('statPending').textContent = pending.length;
+    if (!pending.length) {
+      pendingBody.innerHTML = '<tr class="empty-row"><td colspan="4">No sellers waiting on review.</td></tr>';
+      return;
+    }
+    pendingBody.innerHTML = pending.map(([uid, u]) => `
+      <tr>
+        <td>${u.displayName || '—'}</td>
+        <td>${u.email || '—'}</td>
+        <td>${formatDate(u.createdAt)}</td>
+        <td class="row-actions">
+          <button class="btn-approve" data-uid="${uid}" data-action="approved">Approve</button>
+          <button class="btn-reject" data-uid="${uid}" data-action="rejected">Reject</button>
+        </td>
+      </tr>
+    `).join('');
+    pendingBody.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.closest('tr').style.opacity = '.5';
+        await setSellerStatus(btn.dataset.uid, btn.dataset.action);
+      });
+    });
+  }
+
+  function renderSellers() {
+    const sellersBody = document.getElementById('sellersBody');
+    let sellers = Object.entries(allUsers).filter(([, u]) => u.role === 'seller');
+    document.getElementById('statSellers').textContent = sellers.filter(([, u]) => u.status === 'approved').length;
+    document.getElementById('statBuyers').textContent = Object.values(allUsers).filter(u => u.role === 'buyer').length;
+    if (sellerFilter !== 'all') sellers = sellers.filter(([, u]) => u.status === sellerFilter);
+    if (!sellers.length) {
+      sellersBody.innerHTML = '<tr class="empty-row"><td colspan="4">No sellers in this category.</td></tr>';
+      return;
+    }
+    sellersBody.innerHTML = sellers.map(([uid, u]) => `
+      <tr>
+        <td>${u.displayName || '—'}</td>
+        <td>${u.email || '—'}</td>
+        <td><span class="pill ${u.status}">${u.status}</span></td>
+        <td class="row-actions">
+          ${u.status === 'approved' ? `<button class="btn-suspend" data-uid="${uid}" data-action="suspended">Suspend</button>` : ''}
+          ${u.status === 'suspended' || u.status === 'rejected' ? `<button class="btn-approve" data-uid="${uid}" data-action="approved">Reinstate</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+    sellersBody.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.closest('tr').style.opacity = '.5';
+        await setSellerStatus(btn.dataset.uid, btn.dataset.action);
+      });
+    });
+  }
+
+  document.getElementById('sellerTabs').addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    document.querySelectorAll('#sellerTabs button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    sellerFilter = e.target.dataset.filter;
+    renderSellers();
+  });
+
+  function loadUsers() {
+    onValue(ref(db, 'users'), (snap) => {
+      allUsers = snap.exists() ? snap.val() : {};
+      renderPending();
+      renderSellers();
+    });
+  }
+
+  function loadProperties() {
+    onValue(ref(db, 'properties'), (snap) => {
+      const propertiesBody = document.getElementById('propertiesBody');
+      allProperties = snap.exists() ? snap.val() : {};
+      const properties = Object.values(allProperties);
+      document.getElementById('statProperties').textContent = properties.length;
+      if (!properties.length) {
+        propertiesBody.innerHTML = '<tr class="empty-row"><td colspan="4">No properties posted yet.</td></tr>';
+      } else {
+        propertiesBody.innerHTML = properties.slice(0, 50).map(p => `
+          <tr>
+            <td>${p.location || '—'}</td>
+            <td>${formatPrice(p.price)}</td>
+            <td>${p.sellerName || '—'}</td>
+            <td><span class="pill approved">${p.status || 'active'}</span></td>
+          </tr>
+        `).join('');
+      }
+      renderSalesQueue();
+    });
+  }
+
+  function loadOffersAndTransactions() {
+    onValue(ref(db, 'offers'), (snap) => {
+      allOffers = snap.exists() ? snap.val() : {};
+      renderSalesQueue();
+    });
+    onValue(ref(db, 'transactions'), (snap) => {
+      allTransactions = snap.exists() ? snap.val() : {};
+      renderSalesQueue();
+    });
+  }
+
+  function renderSalesQueue() {
+    const salesBody = document.getElementById('salesBody');
+    const confirmedOfferIds = new Set(Object.values(allTransactions).map(t => t.offerId));
+    const pending = Object.entries(allOffers).filter(([id, o]) => o.status === 'accepted' && !confirmedOfferIds.has(id));
+    if (!pending.length) {
+      salesBody.innerHTML = '<tr class="empty-row"><td colspan="5">No accepted offers waiting on confirmation.</td></tr>';
+      return;
+    }
+    salesBody.innerHTML = pending.map(([id, o]) => {
+      const p = allProperties[o.propertyId];
+      return `
+        <tr>
+          <td>${p ? p.location : o.propertyId}</td>
+          <td>${o.buyerName || '—'}</td>
+          <td>${p ? p.sellerName : '—'}</td>
+          <td>${formatPrice(o.amount)}</td>
+          <td class="row-actions"><button class="btn-approve" data-confirm="${id}">Confirm sale</button></td>
+        </tr>
+      `;
+    }).join('');
+    salesBody.querySelectorAll('[data-confirm]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const offerId = btn.dataset.confirm;
+        const o = allOffers[offerId];
+        btn.disabled = true; btn.textContent = 'Confirming…';
+        const fee = Math.round(o.amount * PLATFORM_FEE_RATE * 100) / 100;
+        const newTxRef = push(ref(db, 'transactions'));
+        const txId = newTxRef.key;
+        // Fixed: this used to only write the transaction record itself.
+        // buyer-dashboard.html's "leave a review" flow reads from
+        // userTransactions/{buyerId} to find eligible transactions, so
+        // without these two extra lines a confirmed sale would never
+        // actually become reviewable for the buyer.
+        const updates = {};
+        updates[`transactions/${txId}`] = {
+          offerId, propertyId: o.propertyId, buyerId: o.buyerId, sellerId: o.sellerId,
+          amount: o.amount, platformFee: fee, sellerPayout: o.amount - fee,
+          status: 'completed', method: 'manual', createdAt: Date.now()
+        };
+        updates[`userTransactions/${o.buyerId}/${txId}`] = true;
+        updates[`userTransactions/${o.sellerId}/${txId}`] = true;
+        await update(ref(db), updates);
+      });
+    });
+  }
+
+  function loadAnalytics() {
+    onValue(ref(db, 'analyticsEvents'), (snap) => {
+      const events = snap.exists() ? Object.values(snap.val()) : [];
+      document.getElementById('statViews').textContent = events.filter(e => e.type === 'view').length;
+      document.getElementById('statClicks').textContent = events.filter(e => e.type === 'purchase_click').length;
+    }, () => {
+      document.getElementById('statViews').textContent = '0';
+      document.getElementById('statClicks').textContent = '0';
+    });
+  }
+
+  // ---- Conversations oversight ----
+  // Admins already have full read access to the top-level 'chats' node
+  // (see rules), so this doesn't need the userChats index at all — that
+  // index exists to let ordinary buyers/sellers avoid a broad read they're
+  // not permitted to make; admins already have the broad read.
+  function loadConversations() {
+    onValue(ref(db, 'chats'), (snap) => {
+      allChats = snap.exists() ? snap.val() : {};
+      renderConversations();
+    });
+  }
+
+  function renderConversations() {
+    const body = document.getElementById('conversationsBody');
+    const entries = Object.entries(allChats).sort((a, b) => (b[1].lastUpdated || 0) - (a[1].lastUpdated || 0));
+    if (!entries.length) {
+      body.innerHTML = '<tr class="empty-row"><td colspan="5">No conversations yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = entries.map(([id, c]) => {
+      const prop = c.propertyId ? allProperties[c.propertyId] : null;
+      const unread = c.buyerHasUnread || c.sellerHasUnread;
+      return `
+        <tr class="clickable" data-chat="${id}">
+          <td>${unread ? '<span class="unread-dot"></span>' : ''}${c.buyerName || '—'}</td>
+          <td>${c.sellerName || '—'}</td>
+          <td>${prop ? prop.location : '—'}</td>
+          <td>${escapeHtml(c.lastMessage) || '<span style="color:var(--ink-soft)">No messages yet</span>'}</td>
+          <td>${c.lastUpdated ? formatTime(c.lastUpdated) : '—'}</td>
+        </tr>
+      `;
+    }).join('');
+    body.querySelectorAll('[data-chat]').forEach(row => {
+      row.addEventListener('click', () => openThread(row.dataset.chat));
+    });
+  }
+
+  // ---- Shared thread modal (works for both existing chats and
+  // brand-new admin-initiated conversations) ----
+  const threadModal = document.getElementById('threadModal');
+  const threadMessages = document.getElementById('threadMessages');
+  const threadComposer = document.getElementById('threadComposer');
+  const threadInput = document.getElementById('threadInput');
+  let activeThreadChatId = null;
+  let activeThreadListenerId = null;
+
+  function openThread(chatId) {
+    if (activeThreadListenerId && activeThreadListenerId !== chatId) {
+      // no explicit off() needed here since onChildAdded below re-attaches
+      // fresh each open — see the guard just below.
+    }
+    activeThreadChatId = chatId;
+    activeThreadListenerId = chatId;
+    const c = allChats[chatId] || {};
+    document.getElementById('threadWho').textContent = `${c.buyerName || 'Buyer'} ↔ ${c.sellerName || 'Seller'}`;
+    const prop = c.propertyId ? allProperties[c.propertyId] : null;
+    document.getElementById('threadSub').textContent = prop ? prop.location : (c.propertyId === null ? 'Direct message' : '');
+    threadMessages.innerHTML = '<div style="color:var(--ink-soft); font-size:.85rem;">Loading…</div>';
+    threadModal.classList.add('open');
+
+    onChildAdded(ref(db, `messages/${chatId}`), (snap) => {
+      if (activeThreadChatId !== chatId) return; // stale listener from a since-closed thread
+      const m = snap.val();
+      const placeholder = threadMessages.querySelector('.placeholder-empty');
+      if (threadMessages.children.length === 1 && threadMessages.textContent.includes('Loading')) threadMessages.innerHTML = '';
+      if (placeholder) placeholder.remove();
+      const isAdmin = m.senderId === currentAdmin.uid;
+      const label = isAdmin ? 'You (admin)' : (m.senderId === c.buyerId ? (c.buyerName || 'Buyer') : (c.sellerName || 'Seller'));
+      threadMessages.insertAdjacentHTML('beforeend', `
+        <div class="m-bubble ${isAdmin ? 'admin' : 'other'}">
+          <span class="who-label">${escapeHtml(label)}</span>
+          ${escapeHtml(m.text)}
+          <span class="time">${formatTime(m.timestamp)}</span>
+        </div>
+      `);
+      threadMessages.scrollTop = threadMessages.scrollHeight;
+    });
+  }
+
+  document.getElementById('threadCloseBtn').addEventListener('click', () => {
+    threadModal.classList.remove('open');
+    activeThreadChatId = null;
+    activeThreadListenerId = null;
+  });
+
+  threadComposer.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = threadInput.value.trim();
+    if (!text || !activeThreadChatId) return;
+    threadInput.value = '';
+    try {
+      const chatId = activeThreadChatId;
+      const newRef = push(ref(db, `messages/${chatId}`));
+      await set(newRef, { senderId: currentAdmin.uid, text, timestamp: Date.now() });
+      const c = allChats[chatId] || {};
+      await update(ref(db, `chats/${chatId}`), {
+        lastMessage: text, lastUpdated: Date.now(),
+        buyerHasUnread: c.sellerId === currentAdmin.uid ? c.buyerHasUnread : true,
+        sellerHasUnread: c.buyerId === currentAdmin.uid ? c.sellerHasUnread : true
+      });
+    } catch (err) {
+      alert('Message failed to send: ' + err.message);
+    }
+  });
+
+  // ---- "Message a user" picker ----
+  const userPickerModal = document.getElementById('userPickerModal');
+  const userPickerList = document.getElementById('userPickerList');
+  const userSearchInput = document.getElementById('userSearchInput');
+
+  document.getElementById('newAdminMsgBtn').addEventListener('click', () => {
+    renderUserPicker('');
+    userPickerModal.classList.add('open');
+    userSearchInput.value = '';
+    userSearchInput.focus();
+  });
+  document.getElementById('userPickerCloseBtn').addEventListener('click', () => userPickerModal.classList.remove('open'));
+  userSearchInput.addEventListener('input', () => renderUserPicker(userSearchInput.value.trim().toLowerCase()));
+
+  function renderUserPicker(filterText) {
+    let entries = Object.entries(allUsers).filter(([uid]) => uid !== currentAdmin?.uid);
+    if (filterText) {
+      entries = entries.filter(([, u]) =>
+        (u.displayName || '').toLowerCase().includes(filterText) ||
+        (u.email || '').toLowerCase().includes(filterText)
+      );
+    }
+    entries.sort((a, b) => (a[1].displayName || a[1].email || '').localeCompare(b[1].displayName || b[1].email || ''));
+    if (!entries.length) {
+      userPickerList.innerHTML = '<div style="color:var(--ink-soft); font-size:.85rem; padding:1rem;">No matching users.</div>';
+      return;
+    }
+    userPickerList.innerHTML = entries.slice(0, 60).map(([uid, u]) => `
+      <div class="clickable" data-uid="${uid}" style="padding:.8rem 1.4rem; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-weight:600; font-size:.88rem;">${escapeHtml(u.displayName || 'Unnamed')}</div>
+          <div style="font-size:.76rem; color:var(--ink-soft);">${escapeHtml(u.email || '')} · ${u.role || '—'}</div>
+        </div>
+        <i class="fas fa-arrow-right" style="color:var(--brass);"></i>
+      </div>
+    `).join('');
+    userPickerList.querySelectorAll('[data-uid]').forEach(row => {
+      row.addEventListener('click', () => startOrOpenAdminChat(row.dataset.uid, allUsers[row.dataset.uid]));
+    });
+  }
+
+  // Creates a normal chat record with the admin's UID in whichever slot
+  // (buyer/seller) the target user doesn't occupy, using a friendly
+  // support display name. The target's regular inbox already shows any
+  // chat where their UID appears in either slot, so this needs no schema
+  // changes and shows up for them exactly like a normal conversation.
+  async function startOrOpenAdminChat(targetUid, targetUser) {
+    userPickerModal.classList.remove('open');
+
+    const existing = Object.entries(allChats).find(([, c]) =>
+      (c.buyerId === currentAdmin.uid && c.sellerId === targetUid) ||
+      (c.sellerId === currentAdmin.uid && c.buyerId === targetUid)
+    );
+    if (existing) { openThread(existing[0]); return; }
+
+    const targetIsSeller = targetUser?.role === 'seller';
+    const newRef = push(ref(db, 'chats'));
+    const chatId = newRef.key;
+    const chatData = targetIsSeller
+      ? { propertyId: null, buyerId: currentAdmin.uid, sellerId: targetUid, buyerName: ADMIN_DISPLAY_NAME, sellerName: targetUser?.displayName || 'Seller' }
+      : { propertyId: null, buyerId: targetUid, sellerId: currentAdmin.uid, buyerName: targetUser?.displayName || 'Buyer', sellerName: ADMIN_DISPLAY_NAME };
+
+    const updates = {};
+    updates[`chats/${chatId}`] = { ...chatData, lastMessage: '', lastUpdated: Date.now(), buyerHasUnread: false, sellerHasUnread: false };
+    updates[`userChats/${currentAdmin.uid}/${chatId}`] = true;
+    updates[`userChats/${targetUid}/${chatId}`] = true;
+    await update(ref(db), updates);
+    allChats[chatId] = updates[`chats/${chatId}`];
+    openThread(chatId);
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'admin-login.html'; return; }
+    try {
+      await user.getIdToken(true); // force-refresh so the DB connection has a valid token before the first read
+      const adminSnap = await get(ref(db, `admins/${user.uid}`));
+      if (!adminSnap.exists()) { await signOut(auth); window.location.href = 'admin-login.html'; return; }
+    } catch (err) {
+      console.error('[Dominion] Admin check failed:', err);
+      document.body.innerHTML = `<div style="padding:3rem; font-family:monospace;">Couldn't verify admin access (${err.message || err.code}). Try refreshing, or log out and back in.</div>`;
+      return;
+    }
+    currentAdmin = user;
+    loadUsers();
+    loadProperties();
+    loadOffersAndTransactions();
+    loadAnalytics();
+    loadConversations();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'admin-login.html';
+  });
+</script>
+</body>
+</html>

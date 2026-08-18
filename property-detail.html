@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property details — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3; --red:#B3413A; --red-tint:#F6E5E3; --amber-tint:#F6EEDD;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); line-height:1.55;}
+  a{color:inherit; text-decoration:none;}
+  .container{max-width:1200px; margin:0 auto; padding:0 24px;}
+
+  .navbar{position:sticky; top:0; z-index:100; background:rgba(247,244,236,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:.9rem 0;}
+  .nav-container{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;}
+  .logo{display:flex; flex-direction:column; line-height:1;}
+  .logo .mark{font-family:var(--mono); font-size:.64rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.25rem;}
+  .nav-links{display:flex; gap:1.3rem; align-items:center; flex-wrap:wrap;}
+  .nav-links a{color:var(--ink-soft); font-weight:500; font-size:.9rem;}
+  .nav-links a:hover{color:var(--ink);}
+  .btn{font-weight:600; font-size:.88rem; border-radius:100px; cursor:pointer; border:1.5px solid transparent; padding:.6rem 1.3rem; transition:.2s;}
+  .btn-primary{background:var(--emerald); color:#fff;}
+  .btn-primary:hover{background:var(--emerald-deep);}
+  .btn-outline{background:transparent; border-color:var(--ink); color:var(--ink);}
+  .btn-outline:hover{background:var(--ink); color:var(--paper);}
+
+  .breadcrumb{font-family:var(--mono); font-size:.78rem; color:var(--ink-soft); margin:1.6rem 0 1rem;}
+  .breadcrumb a{color:var(--brass);}
+
+  .gallery{display:grid; grid-template-columns:2fr 1fr; gap:.6rem; border-radius:20px; overflow:hidden; margin-bottom:1.8rem; height:420px;}
+  .gallery-main{background-size:cover; background-position:center; cursor:pointer;}
+  .gallery-side{display:grid; grid-template-rows:1fr 1fr; gap:.6rem;}
+  .gallery-side div{background-size:cover; background-position:center; cursor:pointer; position:relative;}
+  .gallery-side div.more::after{content:attr(data-more); position:absolute; inset:0; background:rgba(14,23,18,.55); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:.85rem;}
+  @media (max-width:768px){ .gallery{grid-template-columns:1fr; height:auto;} .gallery-main{height:260px;} .gallery-side{display:none;} }
+
+  .detail-layout{display:grid; grid-template-columns:1.6fr 1fr; gap:2.4rem; margin-bottom:3rem; align-items:start;}
+  @media (max-width:900px){ .detail-layout{grid-template-columns:1fr;} }
+
+  .listing-type-badge{display:inline-block; background:var(--ink); color:var(--paper); padding:.3rem .9rem; border-radius:4px; font-size:.68rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; font-family:var(--mono); transform:rotate(-2deg);}
+  .listing-type-badge.rent{background:var(--brass); color:#241C0F;}
+  .listing-type-badge.lease{background:var(--emerald);}
+  .price{font-family:var(--mono); font-size:2.1rem; font-weight:600; margin:.7rem 0 .3rem;}
+  .location{color:var(--ink-soft); display:flex; align-items:center; gap:.4rem; margin-bottom:1.2rem;}
+  .location i{color:var(--brass);}
+
+  .stats-strip{display:flex; gap:1.6rem; flex-wrap:wrap; padding:1.2rem 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:1.6rem;}
+  .stats-strip div{font-size:.88rem; color:var(--ink-soft); display:flex; align-items:center; gap:.5rem;}
+  .stats-strip i{color:var(--emerald);}
+
+  .block-title{font-family:var(--display); font-weight:500; font-size:1.25rem; margin-bottom:.8rem;}
+  .description{color:var(--ink-soft); margin-bottom:2rem; line-height:1.8;}
+
+  .feature-chips{display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:2rem;}
+  .feature-chips span{background:var(--emerald-tint); color:var(--emerald-deep); padding:.4rem 1rem; border-radius:100px; font-size:.82rem; font-weight:600;}
+
+  #map{height:280px; border-radius:16px; margin-bottom:2rem; border:1px solid var(--line); display:none;}
+
+  /* Sidebar */
+  .side-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:18px; padding:1.6rem; margin-bottom:1.4rem;}
+  .seller-row{display:flex; align-items:center; gap:.8rem; margin-bottom:1rem;}
+  .seller-avatar{width:46px; height:46px; border-radius:50%; background:var(--emerald-tint); color:var(--emerald-deep); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:600;}
+  .seller-name{font-weight:700; font-size:.95rem;}
+  .seller-sub{font-size:.78rem; color:var(--ink-soft);}
+  .side-card .btn{width:100%; margin-top:.5rem;}
+
+  .offer-status{font-family:var(--mono); font-size:.74rem; padding:.5rem .8rem; border-radius:8px; margin-bottom:.9rem; display:none;}
+  .offer-status.pending{background:var(--amber-tint); color:#7A5B12; display:block;}
+  .offer-status.accepted{background:var(--emerald-tint); color:var(--emerald-deep); display:block;}
+  .offer-status.rejected{background:var(--red-tint); color:var(--red); display:block;}
+  .offer-status.countered{background:var(--brass-tint); color:#6B4E23; display:block;}
+  .field label{display:block; font-size:.8rem; font-weight:600; margin-bottom:.4rem; color:var(--ink-soft);}
+  .field input{width:100%; padding:.75rem .9rem; border:1.5px solid var(--line); border-radius:10px; font-family:var(--mono); background:var(--paper); color:var(--ink); outline:none; margin-bottom:.9rem;}
+  .field input:focus{border-color:var(--brass);}
+
+  .mortgage-mini .payment{font-family:var(--mono); font-size:1.5rem; font-weight:600; color:var(--emerald-deep); text-align:center; margin-top:.6rem;}
+
+  .msg{font-size:.82rem; padding:.6rem .8rem; border-radius:8px; margin-top:.8rem; display:none;}
+  .msg.error{background:var(--red-tint); color:var(--red); display:block;}
+  .msg.info{background:var(--emerald-tint); color:var(--emerald-deep); display:block;}
+
+  .btn-sm-inline{padding:.45rem .9rem; font-size:.8rem;}
+  #saveBtn.saved{background:var(--red-tint); color:var(--red); border-color:var(--red-tint);}
+  #saveBtn.saved i{font-weight:900;}
+
+  .related-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.2rem; margin:1rem 0 3rem;}
+  .related-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:14px; overflow:hidden; cursor:pointer; transition:.25s;}
+  .related-card:hover{transform:translateY(-4px); box-shadow:0 16px 28px -14px rgba(22,36,30,.25);}
+  .related-card .img{height:140px; background-size:cover; background-position:center;}
+  .related-card .info{padding:.9rem;}
+  .related-card .p{font-family:var(--mono); font-weight:600;}
+  .related-card .l{font-size:.78rem; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a>
+    <div class="nav-links">
+      <a href="listings.html">Listings</a>
+      <button class="btn btn-outline" id="loginNavBtn">Log in</button>
+      <button class="btn btn-primary" id="dashboardBtn" style="display:none;">Dashboard</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <a href="listings.html">Listings</a> / <span id="crumbLocation">…</span></div>
+
+  <div class="gallery" id="gallery">
+    <div class="gallery-main" id="galleryMain"></div>
+    <div class="gallery-side" id="gallerySide"></div>
+  </div>
+
+  <div class="detail-layout">
+    <div>
+      <span class="listing-type-badge" id="listingTypeBadge">For Sale</span>
+      <button class="btn btn-outline btn-sm-inline" id="saveBtn" style="float:right;"><i class="far fa-heart"></i> Save</button>
+      <div class="price" id="detailPrice">—</div>
+      <div class="location" id="detailLocation"><i class="fas fa-map-marker-alt"></i> <span></span></div>
+
+      <div class="stats-strip">
+        <div><i class="fas fa-bed"></i> <span id="statBeds">–</span> beds</div>
+        <div><i class="fas fa-bath"></i> <span id="statBaths">–</span> baths</div>
+        <div><i class="fas fa-ruler-combined"></i> <span id="statArea">–</span> sqft</div>
+        <div><i class="fas fa-house"></i> <span id="statType">–</span></div>
+      </div>
+
+      <div class="block-title">About this property</div>
+      <p class="description" id="detailDescription">Loading…</p>
+
+      <div id="featuresBlock" style="display:none;">
+        <div class="block-title">Features & amenities</div>
+        <div class="feature-chips" id="featureChips"></div>
+      </div>
+
+      <div id="map"></div>
+
+      <div class="block-title">More from this seller</div>
+      <div class="related-grid" id="relatedGrid"><div style="color:var(--ink-soft); font-size:.88rem;">Loading…</div></div>
+    </div>
+
+    <div>
+      <div class="side-card">
+        <div class="seller-row">
+          <div class="seller-avatar" id="sellerAvatar">—</div>
+          <div>
+            <div class="seller-name" id="sellerName">—</div>
+            <div class="seller-sub">Listed <span id="sellerListedAt">—</span></div>
+          </div>
+        </div>
+        <button class="btn btn-outline" id="viewSellerBtn">View seller profile</button>
+        <button class="btn btn-primary" id="messageSellerBtn">Message seller</button>
+      </div>
+
+      <div class="side-card">
+        <div class="block-title" style="margin-bottom:1rem;">Make an offer</div>
+        <div class="offer-status" id="offerStatus"></div>
+        <form id="offerForm">
+          <div class="field">
+            <label>Your offer ($)</label>
+            <input type="number" id="offerAmount" placeholder="e.g., 480000" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="offerSubmitBtn">Submit offer</button>
+        </form>
+        <div class="msg" id="offerMsg"></div>
+      </div>
+
+      <div class="side-card mortgage-mini">
+        <div class="block-title" style="margin-bottom:1rem;">Estimate your payment</div>
+        <div class="field"><label>Down payment ($)</label><input type="number" id="mDown" value="0"></div>
+        <div class="field"><label>Interest rate (%)</label><input type="number" id="mRate" value="6.5" step="0.1"></div>
+        <div class="field"><label>Term (years)</label><input type="number" id="mTerm" value="30"></div>
+        <div class="payment" id="mPayment">$0/mo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import {
+    getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, update
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const params = new URLSearchParams(window.location.search);
+  const propertyId = params.get('id');
+  let currentUser = null;
+  let currentUserRole = null;
+  let property = null;
+  let myOfferId = null;
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price || 0);
+  }
+  function getListingLabel(type) {
+    if (type === 'buy') return 'For Sale';
+    if (type === 'rent') return 'For Rent';
+    return 'For Lease';
+  }
+  function logEvent(type) {
+    const eventsRef = ref(db, 'analyticsEvents');
+    const newRef = push(eventsRef);
+    set(newRef, { type, propertyId, timestamp: Date.now() }).catch(() => {});
+  }
+
+  if (!propertyId) {
+    document.querySelector('.detail-layout').innerHTML = '<p>No property specified.</p>';
+  } else {
+    loadProperty();
+  }
+
+  async function loadProperty() {
+    const snap = await get(ref(db, `properties/${propertyId}`));
+    if (!snap.exists()) {
+      document.querySelector('.detail-layout').innerHTML = '<p>This property could not be found — it may have been removed.</p>';
+      return;
+    }
+    property = snap.val();
+    logEvent('view');
+    trackRecentlyViewed();
+    renderProperty();
+    loadRelated();
+    if (property.lat && property.lng) initMap();
+    setupMortgage();
+  }
+
+  function trackRecentlyViewed() {
+    try {
+      let recent = JSON.parse(localStorage.getItem('dhh-recently-viewed') || '[]');
+      recent = recent.filter(id => id !== propertyId);
+      recent.unshift(propertyId);
+      recent = recent.slice(0, 10);
+      localStorage.setItem('dhh-recently-viewed', JSON.stringify(recent));
+    } catch {}
+  }
+
+  function renderProperty() {
+    document.title = `${property.location} — Dominion Home Hub`;
+    document.getElementById('crumbLocation').textContent = property.location;
+
+    const images = (property.images && property.images.length) ? property.images : ['https://via.placeholder.com/900x600?text=Dominion+Home'];
+    document.getElementById('galleryMain').style.backgroundImage = `url('${images[0]}')`;
+    const side = document.getElementById('gallerySide');
+    side.innerHTML = '';
+    for (let i = 1; i < 3; i++) {
+      const div = document.createElement('div');
+      const img = images[i] || images[0];
+      div.style.backgroundImage = `url('${img}')`;
+      if (i === 2 && images.length > 3) {
+        div.classList.add('more');
+        div.setAttribute('data-more', `+${images.length - 3} more`);
+      }
+      side.appendChild(div);
+    }
+
+    const badge = document.getElementById('listingTypeBadge');
+    badge.textContent = getListingLabel(property.listingType);
+    badge.className = 'listing-type-badge ' + (property.listingType === 'rent' ? 'rent' : property.listingType === 'lease' ? 'lease' : '');
+
+    document.getElementById('detailPrice').textContent = formatPrice(property.price);
+    document.getElementById('detailLocation').querySelector('span').textContent = property.location;
+    document.getElementById('statBeds').textContent = property.bedrooms ?? '–';
+    document.getElementById('statBaths').textContent = property.bathrooms ?? '–';
+    document.getElementById('statArea').textContent = property.area || '–';
+    document.getElementById('statType').textContent = property.propertyType || 'Property';
+    document.getElementById('detailDescription').textContent = property.description || 'No description provided yet.';
+
+    if (property.features && property.features.length) {
+      document.getElementById('featuresBlock').style.display = 'block';
+      document.getElementById('featureChips').innerHTML = property.features.map(f => `<span>${f}</span>`).join('');
+    }
+
+    document.getElementById('sellerAvatar').textContent = (property.sellerName || 'S').charAt(0).toUpperCase();
+    document.getElementById('sellerName').textContent = property.sellerName || 'Property owner';
+    document.getElementById('sellerListedAt').textContent = property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—';
+    document.getElementById('viewSellerBtn').addEventListener('click', () => {
+      window.location.href = `seller-profile.html?sellerId=${property.sellerId}`;
+    });
+
+    document.getElementById('mDown').value = Math.round((property.price || 0) * 0.2);
+    calcMortgage();
+  }
+
+  function initMap() {
+    const mapDiv = document.getElementById('map');
+    mapDiv.style.display = 'block';
+    const map = L.map('map').setView([property.lat, property.lng], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap & CartoDB'
+    }).addTo(map);
+    L.marker([property.lat, property.lng]).addTo(map);
+  }
+
+  function setupMortgage() {
+    ['mDown', 'mRate', 'mTerm'].forEach(id => document.getElementById(id).addEventListener('input', calcMortgage));
+  }
+  function calcMortgage() {
+    const price = property?.price || 0;
+    const down = parseFloat(document.getElementById('mDown').value) || 0;
+    const rate = parseFloat(document.getElementById('mRate').value) || 0;
+    const term = parseFloat(document.getElementById('mTerm').value) || 30;
+    const loan = price - down;
+    const monthlyRate = rate / 100 / 12;
+    const months = term * 12;
+    let payment = 0;
+    if (loan > 0 && months > 0) {
+      payment = monthlyRate === 0 ? loan / months : loan * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    }
+    document.getElementById('mPayment').textContent = `${formatPrice(payment)}/mo`;
+  }
+
+  async function loadRelated() {
+    const relatedGrid = document.getElementById('relatedGrid');
+    const q = query(ref(db, 'properties'), orderByChild('sellerId'), equalTo(property.sellerId));
+    const snap = await get(q);
+    if (!snap.exists()) { relatedGrid.innerHTML = '<div style="color:var(--ink-soft); font-size:.88rem;">No other listings from this seller yet.</div>'; return; }
+    const items = [];
+    snap.forEach(child => { if (child.key !== propertyId) items.push({ id: child.key, ...child.val() }); });
+    if (!items.length) { relatedGrid.innerHTML = '<div style="color:var(--ink-soft); font-size:.88rem;">No other listings from this seller yet.</div>'; return; }
+    relatedGrid.innerHTML = items.slice(0, 4).map(p => `
+      <div class="related-card" data-id="${p.id}">
+        <div class="img" style="background-image:url('${(p.images && p.images[0]) || 'https://via.placeholder.com/400x300?text=Dominion+Home'}')"></div>
+        <div class="info"><div class="p">${formatPrice(p.price)}</div><div class="l">${p.location}</div></div>
+      </div>
+    `).join('');
+    relatedGrid.querySelectorAll('.related-card').forEach(card => {
+      card.addEventListener('click', () => window.location.href = `property-detail.html?id=${card.dataset.id}`);
+    });
+  }
+
+  // ---- Auth + nav ----
+  const loginNavBtn = document.getElementById('loginNavBtn');
+  const dashboardBtn = document.getElementById('dashboardBtn');
+  loginNavBtn.addEventListener('click', () => window.location.href = 'login.html');
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (user) {
+      const uSnap = await get(ref(db, `users/${user.uid}`));
+      const u = uSnap.exists() ? uSnap.val() : {};
+      currentUserRole = u.role;
+      loginNavBtn.style.display = 'none';
+      dashboardBtn.style.display = 'inline-block';
+      dashboardBtn.onclick = () => {
+        window.location.href = u.role === 'seller' ? (u.status === 'approved' ? 'dashboard.html' : 'pending-approval.html') : 'buyer-dashboard.html';
+      };
+      watchMyOffer();
+      initSaveButton(u);
+    } else {
+      loginNavBtn.style.display = 'inline-block';
+      dashboardBtn.style.display = 'none';
+    }
+  });
+
+  function initSaveButton(u) {
+    const saveBtn = document.getElementById('saveBtn');
+    const isSaved = !!(u.savedProperties && u.savedProperties[propertyId]);
+    updateSaveBtn(isSaved);
+    saveBtn.addEventListener('click', async () => {
+      const nowSaved = saveBtn.classList.contains('saved');
+      const path = ref(db, `users/${currentUser.uid}/savedProperties/${propertyId}`);
+      if (nowSaved) { await set(path, null); updateSaveBtn(false); }
+      else { await set(path, true); updateSaveBtn(true); }
+    });
+  }
+  function updateSaveBtn(saved) {
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.classList.toggle('saved', saved);
+    saveBtn.innerHTML = saved ? '<i class="fas fa-heart"></i> Saved' : '<i class="far fa-heart"></i> Save';
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    if (!currentUser) window.location.href = `login.html?redirect=property-detail.html?id=${propertyId}`;
+  });
+
+  // ---- Offer / bid flow ----
+  const offerForm = document.getElementById('offerForm');
+  const offerStatus = document.getElementById('offerStatus');
+  const offerMsg = document.getElementById('offerMsg');
+
+  async function watchMyOffer() {
+    if (!currentUser || !propertyId) return;
+    // Look up which offer (if any) this buyer has already made on this
+    // specific property via the pointer index, then watch that one offer
+    // live — avoids ever needing a broad read across all offers.
+    const ptrSnap = await get(ref(db, `userPropertyOffers/${currentUser.uid}/${propertyId}`));
+    if (!ptrSnap.exists()) return;
+    const offerId = ptrSnap.val();
+    myOfferId = offerId;
+    onValue(ref(db, `offers/${offerId}`), (snap) => {
+      if (snap.exists()) renderOfferStatus(snap.val());
+    });
+  }
+
+  function renderOfferStatus(offer) {
+    offerStatus.className = `offer-status ${offer.status}`;
+    if (offer.status === 'pending') offerStatus.textContent = `Your offer of ${formatPrice(offer.amount)} is awaiting a response.`;
+    else if (offer.status === 'accepted') offerStatus.textContent = `Accepted at ${formatPrice(offer.amount)} — message the seller to arrange next steps.`;
+    else if (offer.status === 'rejected') offerStatus.textContent = `This offer was declined.`;
+    else if (offer.status === 'countered') offerStatus.textContent = `Seller countered at ${formatPrice(offer.counterAmount)}.`;
+    document.getElementById('offerSubmitBtn').textContent = 'Submit a new offer';
+  }
+
+  offerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    logEvent('purchase_click');
+    if (!currentUser) { window.location.href = `login.html?redirect=property-detail.html?id=${propertyId}`; return; }
+    if (currentUser.uid === property.sellerId) {
+      offerMsg.className = 'msg error'; offerMsg.textContent = "You can't bid on your own listing."; return;
+    }
+    const amount = parseFloat(document.getElementById('offerAmount').value);
+    if (!amount || amount <= 0) return;
+    const newRef = push(ref(db, 'offers'));
+    const offerId = newRef.key;
+    try {
+      // Multi-path update: the offer record plus both index entries land
+      // together atomically. Security rules can cross-reference paths
+      // written in the SAME update() call, which is what lets the buyer's
+      // write into the seller's userOffers/{sellerId} node validate.
+      const updates = {};
+      updates[`offers/${offerId}`] = {
+        propertyId, buyerId: currentUser.uid, sellerId: property.sellerId,
+        buyerName: currentUser.displayName || currentUser.email,
+        amount, status: 'pending', createdAt: Date.now(), updatedAt: Date.now()
+      };
+      updates[`userOffers/${currentUser.uid}/${offerId}`] = true;
+      updates[`userOffers/${property.sellerId}/${offerId}`] = true;
+      updates[`userPropertyOffers/${currentUser.uid}/${propertyId}`] = offerId;
+      await update(ref(db), updates);
+      offerMsg.className = 'msg info';
+      offerMsg.textContent = 'Offer submitted — the seller has been notified.';
+      offerForm.reset();
+    } catch (err) {
+      offerMsg.className = 'msg error';
+      offerMsg.textContent = err.message.replace('Firebase: ', '');
+    }
+  });
+
+  // ---- Message seller ----
+  document.getElementById('messageSellerBtn').addEventListener('click', async () => {
+    if (!currentUser) { window.location.href = `login.html?redirect=property-detail.html?id=${propertyId}`; return; }
+    if (currentUser.uid === property.sellerId) return;
+
+    // Look up which chats this buyer is part of via their own index, then
+    // fetch each one by ID to check for a match on this seller — avoids
+    // ever needing a broad read across the whole chats collection.
+    const idxSnap = await get(ref(db, `userChats/${currentUser.uid}`));
+    let existingId = null;
+    if (idxSnap.exists()) {
+      const chatIds = Object.keys(idxSnap.val());
+      for (const id of chatIds) {
+        const cSnap = await get(ref(db, `chats/${id}`));
+        if (cSnap.exists() && cSnap.val().sellerId === property.sellerId) { existingId = id; break; }
+      }
+    }
+    if (existingId) { window.location.href = `chat.html?chatId=${existingId}`; return; }
+
+    const newRef = push(ref(db, 'chats'));
+    const chatId = newRef.key;
+    const updates = {};
+    updates[`chats/${chatId}`] = {
+      propertyId, buyerId: currentUser.uid, sellerId: property.sellerId,
+      buyerName: currentUser.displayName || currentUser.email,
+      sellerName: property.sellerName || 'Seller',
+      lastMessage: '', lastUpdated: Date.now(), buyerHasUnread: false, sellerHasUnread: false
+    };
+    updates[`userChats/${currentUser.uid}/${chatId}`] = true;
+    updates[`userChats/${property.sellerId}/${chatId}`] = true;
+    await update(ref(db), updates);
+    window.location.href = `chat.html?chatId=${chatId}`;
+  });
+</script>
+
+</body>
+</html>

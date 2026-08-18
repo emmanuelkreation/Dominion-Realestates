@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Index backfill (admin only) — Dominion Home Hub</title>
+<style>
+  body{font-family:sans-serif; max-width:700px; margin:40px auto; padding:0 20px; line-height:1.6;}
+  button{background:#2F5D4C; color:#fff; border:none; padding:.8rem 1.5rem; border-radius:8px; font-size:1rem; cursor:pointer;}
+  button:disabled{background:#999; cursor:not-allowed;}
+  #log{background:#f4f4f4; border:1px solid #ddd; border-radius:8px; padding:1rem; margin-top:1.5rem; font-family:monospace; font-size:.85rem; white-space:pre-wrap; max-height:420px; overflow-y:auto;}
+  .warn{background:#fff3cd; border:1px solid #ffeaa7; padding:1rem; border-radius:8px; margin-bottom:1.5rem;}
+</style>
+</head>
+<body>
+
+<h1>Index backfill tool</h1>
+<div class="warn">
+  <strong>Admin only.</strong> This reads every existing chat, offer, and transaction and writes the matching
+  <code>userChats</code> / <code>userOffers</code> / <code>userPropertyOffers</code> / <code>userTransactions</code>
+  entries so old records become visible again under the new rules. Safe to run more than once — it only ever
+  writes <code>true</code> flags, never deletes anything. You must be signed in on this browser with an account
+  listed under <code>/admins</code> in the database, or every write below will fail.
+</div>
+
+<p><strong>Status:</strong> <span id="authStatus">checking…</span></p>
+<button id="runBtn" disabled>Run backfill</button>
+<div id="log"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com",
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const logEl = document.getElementById('log');
+  const runBtn = document.getElementById('runBtn');
+  const authStatus = document.getElementById('authStatus');
+  function log(msg) { logEl.textContent += msg + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      authStatus.textContent = 'Not signed in. Log into an admin account on this site first, then reload this page.';
+      return;
+    }
+    const adminSnap = await get(ref(db, `admins/${user.uid}`));
+    if (!adminSnap.exists()) {
+      authStatus.textContent = `Signed in as ${user.email}, but this account is not listed under /admins — the backfill writes will fail.`;
+      return;
+    }
+    authStatus.textContent = `Signed in as ${user.email} (confirmed admin). Ready.`;
+    runBtn.disabled = false;
+  });
+
+  runBtn.addEventListener('click', async () => {
+    runBtn.disabled = true;
+    logEl.textContent = '';
+    const updates = {};
+
+    try {
+      log('Reading chats…');
+      const chatsSnap = await get(ref(db, 'chats'));
+      let chatCount = 0;
+      if (chatsSnap.exists()) {
+        chatsSnap.forEach(child => {
+          const c = child.val();
+          if (c.buyerId) updates[`userChats/${c.buyerId}/${child.key}`] = true;
+          if (c.sellerId) updates[`userChats/${c.sellerId}/${child.key}`] = true;
+          chatCount++;
+        });
+      }
+      log(`Found ${chatCount} chats.`);
+
+      log('Reading offers…');
+      const offersSnap = await get(ref(db, 'offers'));
+      let offerCount = 0;
+      if (offersSnap.exists()) {
+        offersSnap.forEach(child => {
+          const o = child.val();
+          if (o.buyerId) updates[`userOffers/${o.buyerId}/${child.key}`] = true;
+          if (o.sellerId) updates[`userOffers/${o.sellerId}/${child.key}`] = true;
+          if (o.buyerId && o.propertyId) updates[`userPropertyOffers/${o.buyerId}/${o.propertyId}`] = child.key;
+          offerCount++;
+        });
+      }
+      log(`Found ${offerCount} offers.`);
+
+      log('Reading transactions…');
+      const txSnap = await get(ref(db, 'transactions'));
+      let txCount = 0;
+      if (txSnap.exists()) {
+        txSnap.forEach(child => {
+          const t = child.val();
+          if (t.buyerId) updates[`userTransactions/${t.buyerId}/${child.key}`] = true;
+          if (t.sellerId) updates[`userTransactions/${t.sellerId}/${child.key}`] = true;
+          txCount++;
+        });
+      }
+      log(`Found ${txCount} transactions.`);
+
+      const writeCount = Object.keys(updates).length;
+      if (!writeCount) {
+        log('\nNothing to backfill — no chats, offers, or transactions found.');
+        runBtn.disabled = false;
+        return;
+      }
+      log(`\nWriting ${writeCount} index entries…`);
+      await update(ref(db), updates);
+      log('Done. Old conversations, offers, and transactions should now show up correctly across the site.');
+    } catch (err) {
+      log('\nERROR: ' + err.message);
+      log('If this says permission_denied, make sure the rules update (adding the admin exception to userChats/userOffers/userPropertyOffers) has actually been published in the Firebase console first.');
+    }
+    runBtn.disabled = false;
+  });
+</script>
+</body>
+</html>

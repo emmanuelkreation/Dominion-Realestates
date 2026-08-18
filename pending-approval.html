@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account under review — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --red:#B3413A; --red-tint:#F6E5E3; --amber-tint:#F6EEDD;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); min-height:100vh; display:flex; flex-direction:column;}
+  a{color:inherit;}
+  .top{padding:1.4rem 2rem;}
+  .logo{display:flex; flex-direction:column; line-height:1; text-decoration:none; width:fit-content;}
+  .logo .mark{font-family:var(--mono); font-size:.66rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.3rem;}
+  .wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:1.5rem;}
+  .card{
+    background:var(--paper-raise); border:1px solid var(--line); border-radius:24px;
+    padding:3rem 2.6rem; width:100%; max-width:480px; text-align:center;
+    box-shadow:0 30px 60px -30px rgba(22,36,30,.25);
+  }
+  .icon-circle{
+    width:72px; height:72px; border-radius:50%; background:var(--emerald-tint); color:var(--emerald-deep);
+    display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 1.4rem;
+  }
+  .icon-circle.rejected{background:var(--red-tint); color:var(--red);}
+  h1{font-family:var(--display); font-weight:500; font-size:1.6rem; margin-bottom:.8rem;}
+  p{color:var(--ink-soft); line-height:1.7; font-size:.94rem; margin-bottom:1.6rem;}
+  .status-tag{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+    display:inline-block; padding:.4rem 1rem; border-radius:100px; background:var(--amber-tint); color:#7A5B12;
+    margin-bottom:1.4rem;
+  }
+  .status-tag.rejected{background:var(--red-tint); color:var(--red);}
+  .btn{
+    display:inline-flex; align-items:center; gap:.5rem; padding:.8rem 1.6rem; border-radius:100px;
+    border:1.5px solid var(--ink); background:transparent; color:var(--ink); font-weight:600; font-size:.9rem;
+    text-decoration:none; cursor:pointer; transition:.2s;
+  }
+  .btn:hover{background:var(--ink); color:var(--paper);}
+</style>
+</head>
+<body>
+
+<div class="top"><a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a></div>
+
+<div class="wrap">
+  <div class="card" id="statusCard">
+    <div class="icon-circle" id="statusIcon"><i class="fas fa-hourglass-half"></i></div>
+    <div class="status-tag" id="statusTag">Pending review</div>
+    <h1 id="statusTitle">Your seller account is under review</h1>
+    <p id="statusText">We check every new seller profile before they can post listings — this usually takes 24–48 hours. You'll be able to sign back in here once you're approved.</p>
+    <button class="btn" id="logoutBtn"><i class="fas fa-arrow-right-from-bracket"></i> Log out</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const statusIcon = document.getElementById('statusIcon');
+  const statusTag = document.getElementById('statusTag');
+  const statusTitle = document.getElementById('statusTitle');
+  const statusText = document.getElementById('statusText');
+
+  function renderStatus(status) {
+    if (status === 'approved') {
+      window.location.href = 'dashboard.html';
+    } else if (status === 'rejected') {
+      statusIcon.classList.add('rejected');
+      statusIcon.innerHTML = '<i class="fas fa-circle-xmark"></i>';
+      statusTag.classList.add('rejected');
+      statusTag.textContent = 'Not approved';
+      statusTitle.textContent = "We couldn't approve this seller account";
+      statusText.textContent = "Reach out to our team if you'd like to know more, or you're welcome to create a new account with updated details.";
+    } else if (status === 'suspended') {
+      statusIcon.classList.add('rejected');
+      statusIcon.innerHTML = '<i class="fas fa-ban"></i>';
+      statusTag.classList.add('rejected');
+      statusTag.textContent = 'Suspended';
+      statusTitle.textContent = 'This seller account is suspended';
+      statusText.textContent = 'Contact our team for details on reinstating your account.';
+    }
+    // 'pending' keeps the default markup already in the page.
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    onValue(ref(db, `users/${user.uid}`), (snap) => {
+      if (!snap.exists()) return;
+      const u = snap.val();
+      if (u.role !== 'seller') { window.location.href = 'buyer-dashboard.html'; return; }
+      renderStatus(u.status);
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'index.html';
+  });
+</script>
+</body>
+</html>

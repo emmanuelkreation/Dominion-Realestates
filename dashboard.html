@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller dashboard — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3; --red:#B3413A; --red-tint:#F6E5E3; --amber-tint:#F6EEDD;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink);}
+  a{color:inherit; text-decoration:none;}
+  .container{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  .navbar{border-bottom:1px solid var(--line); padding:1rem 0; background:var(--paper-raise);}
+  .nav-container{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;}
+  .logo{display:flex; flex-direction:column; line-height:1;}
+  .logo .mark{font-family:var(--mono); font-size:.62rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.15rem;}
+  .nav-right{display:flex; align-items:center; gap:.9rem;}
+  .brand-pill{font-size:.85rem; color:var(--ink-soft);}
+  .logout{background:none; border:1px solid var(--line); padding:.5rem 1.1rem; border-radius:100px; cursor:pointer; font-size:.85rem;}
+  .logout:hover{border-color:var(--brass);}
+
+  .tabs{display:flex; gap:.5rem; margin:1.6rem 0; flex-wrap:wrap;}
+  .tabs button{background:var(--paper-raise); border:1px solid var(--line); color:var(--ink-soft); padding:.6rem 1.2rem; border-radius:100px; cursor:pointer; font-size:.86rem; font-weight:600;}
+  .tabs button.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .tab-badge{background:var(--brass); color:#241C0F; border-radius:100px; font-size:.68rem; padding:.1rem .45rem; margin-left:.4rem;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .stats-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:2rem;}
+  .stat{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.2rem;}
+  .stat .num{font-family:var(--mono); font-size:1.7rem; font-weight:600;}
+  .stat .lab{font-size:.78rem; color:var(--ink-soft); margin-top:.2rem;}
+
+  .section-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:.8rem;}
+  .section-head h2{font-family:var(--display); font-weight:500; font-size:1.3rem;}
+  .btn{font-weight:600; font-size:.86rem; border-radius:100px; cursor:pointer; border:1.5px solid transparent; padding:.65rem 1.3rem; transition:.2s;}
+  .btn-primary{background:var(--emerald); color:#fff;}
+  .btn-primary:hover{background:var(--emerald-deep);}
+  .btn-outline{background:transparent; border-color:var(--ink); color:var(--ink);}
+  .btn-outline:hover{background:var(--ink); color:var(--paper);}
+  .btn-sm{padding:.4rem .9rem; font-size:.78rem; border-radius:8px;}
+  .btn-red{background:var(--red-tint); color:var(--red); border:none;}
+  .btn-green{background:var(--emerald-tint); color:var(--emerald-deep); border:none;}
+  .btn-amber{background:var(--amber-tint); color:#7A5B12; border:none;}
+
+  /* Listing form */
+  .form-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:18px; padding:1.8rem; margin-bottom:2rem; display:none;}
+  .form-card.open{display:block;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:1rem;}
+  @media (max-width:640px){ .form-grid{grid-template-columns:1fr;} }
+  .field{margin-bottom:1rem;}
+  .field.full{grid-column:1/-1;}
+  .field label{display:block; font-size:.8rem; font-weight:600; margin-bottom:.4rem; color:var(--ink-soft);}
+  .field input, .field select, .field textarea{
+    width:100%; padding:.7rem .9rem; border:1.5px solid var(--line); border-radius:10px;
+    font-family:var(--body); font-size:.92rem; outline:none; background:var(--paper); color:var(--ink); resize:vertical;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--brass);}
+  .field .hint{font-size:.74rem; color:var(--ink-soft); margin-top:.3rem;}
+  .form-actions{display:flex; gap:.7rem; margin-top:.6rem;}
+
+  /* Listing cards */
+  .listing-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.2rem;}
+  .listing-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+  .listing-img{height:160px; background-size:cover; background-position:center; position:relative;}
+  .status-pill{position:absolute; top:10px; left:10px; font-family:var(--mono); font-size:.66rem; text-transform:uppercase; padding:.3rem .7rem; border-radius:100px; background:rgba(255,255,255,.9);}
+  .listing-body{padding:1rem;}
+  .listing-price{font-family:var(--mono); font-weight:600; font-size:1.1rem;}
+  .listing-loc{font-size:.8rem; color:var(--ink-soft); margin:.2rem 0 .6rem;}
+  .listing-stats{display:flex; gap:.8rem; font-size:.74rem; color:var(--ink-soft); margin-bottom:.8rem;}
+  .listing-actions{display:flex; gap:.5rem; flex-wrap:wrap;}
+  select.status-select{padding:.4rem .6rem; border-radius:8px; border:1.5px solid var(--line); font-size:.78rem; background:var(--paper);}
+
+  /* Offers */
+  .offer-row{background:var(--paper-raise); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.3rem; margin-bottom:.9rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;}
+  .offer-info .prop{font-weight:700; font-size:.9rem;}
+  .offer-info .buyer{font-size:.8rem; color:var(--ink-soft);}
+  .offer-amount{font-family:var(--mono); font-size:1.2rem; font-weight:600;}
+  .offer-pill{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; padding:.25rem .7rem; border-radius:100px;}
+  .offer-pill.pending{background:var(--amber-tint); color:#7A5B12;}
+  .offer-pill.accepted{background:var(--emerald-tint); color:var(--emerald-deep);}
+  .offer-pill.rejected{background:var(--red-tint); color:var(--red);}
+  .offer-pill.countered{background:var(--brass-tint); color:#6B4E23;}
+  .offer-actions{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;}
+  .counter-input{width:120px; padding:.4rem .6rem; border:1.5px solid var(--line); border-radius:8px; font-family:var(--mono);}
+
+  .empty{color:var(--ink-soft); font-size:.9rem; padding:2rem 0; text-align:center;}
+
+  /* Profile */
+  .profile-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:18px; padding:1.8rem; max-width:600px;}
+  .msg{font-size:.83rem; padding:.6rem .9rem; border-radius:8px; margin-top:1rem; display:none;}
+  .msg.info{background:var(--emerald-tint); color:var(--emerald-deep); display:block;}
+  .msg.error{background:var(--red-tint); color:var(--red); display:block;}
+
+  footer{height:3rem;}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a>
+    <div class="nav-right">
+      <span class="brand-pill" id="brandPill">—</span>
+      <a href="chat.html" class="btn btn-outline btn-sm"><i class="fas fa-comment"></i> Messages</a>
+      <button class="logout" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="tabs">
+    <button class="active" data-tab="overview">Overview</button>
+    <button data-tab="listings">My listings</button>
+    <button data-tab="offers">Offers <span class="tab-badge" id="pendingOfferBadge" style="display:none;">0</span></button>
+    <button data-tab="profile">Profile</button>
+  </div>
+
+  <!-- Overview -->
+  <section class="panel active" id="panel-overview">
+    <div class="stats-row">
+      <div class="stat"><div class="num" id="ovListings">–</div><div class="lab">Active listings</div></div>
+      <div class="stat"><div class="num" id="ovPending">–</div><div class="lab">Pending offers</div></div>
+      <div class="stat"><div class="num" id="ovViews">–</div><div class="lab">Total views</div></div>
+      <div class="stat"><div class="num" id="ovClicks">–</div><div class="lab">Purchase clicks</div></div>
+      <div class="stat"><div class="num" id="ovUnread">–</div><div class="lab">Unread messages</div></div>
+    </div>
+    <div class="empty" id="overviewNote">Post your first property from the "My listings" tab to get started.</div>
+  </section>
+
+  <!-- Listings -->
+  <section class="panel" id="panel-listings">
+    <div class="section-head">
+      <h2>My listings</h2>
+      <button class="btn btn-primary" id="newListingBtn"><i class="fas fa-plus"></i> Post a property</button>
+    </div>
+
+    <div class="form-card" id="listingFormCard">
+      <form id="listingForm">
+        <input type="hidden" id="editingId">
+        <div class="form-grid">
+          <div class="field"><label>Listing type</label>
+            <select id="fListingType"><option value="buy">For sale</option><option value="rent">For rent</option><option value="lease">For lease</option></select>
+          </div>
+          <div class="field"><label>Property type</label>
+            <select id="fPropertyType"><option>House</option><option>Apartment</option><option>Condo</option><option>Townhouse</option><option>Land</option></select>
+          </div>
+          <div class="field"><label>Price ($)</label><input type="number" id="fPrice" required></div>
+          <div class="field"><label>Location</label><input type="text" id="fLocation" placeholder="City, state" required></div>
+          <div class="field"><label>Bedrooms</label><input type="number" id="fBedrooms" min="0"></div>
+          <div class="field"><label>Bathrooms</label><input type="number" id="fBathrooms" min="0" step="0.5"></div>
+          <div class="field"><label>Area (sqft)</label><input type="number" id="fArea" min="0"></div>
+          <div class="field"><label>Featured</label>
+            <select id="fFeatured"><option value="false">No</option><option value="true">Yes</option></select>
+          </div>
+          <div class="field full"><label>Description</label><textarea id="fDescription" rows="3"></textarea></div>
+          <div class="field full"><label>Image URLs</label><textarea id="fImages" rows="2" placeholder="One per line"></textarea><div class="hint">Paste one image URL per line. The first one is used as the cover photo.</div></div>
+          <div class="field full"><label>Features & amenities</label><input type="text" id="fFeatures" placeholder="Pool, garage, fireplace, smart thermostat"><div class="hint">Comma-separated — shown as chips on the property page.</div></div>
+          <div class="field"><label>Latitude (optional)</label><input type="number" step="any" id="fLat"></div>
+          <div class="field"><label>Longitude (optional)</label><input type="number" step="any" id="fLng"></div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="listingSubmitBtn">Post listing</button>
+          <button type="button" class="btn btn-outline" id="cancelListingBtn">Cancel</button>
+        </div>
+        <div class="msg" id="listingMsg"></div>
+      </form>
+    </div>
+
+    <div class="listing-grid" id="listingGrid"><div class="empty">Loading your listings…</div></div>
+  </section>
+
+  <!-- Offers -->
+  <section class="panel" id="panel-offers">
+    <div class="section-head"><h2>Incoming offers</h2></div>
+    <div id="offersList"><div class="empty">Loading offers…</div></div>
+  </section>
+
+  <!-- Profile -->
+  <section class="panel" id="panel-profile">
+    <div class="section-head"><h2>Profile & brand</h2></div>
+    <div class="profile-card">
+      <div class="field"><label>Brand / display name</label><input type="text" id="pName"></div>
+      <div class="field"><label>Logo image URL</label><input type="text" id="pLogo" placeholder="https://…"><div class="hint">Shown as your avatar on your public profile. Leave blank to use your initial instead.</div></div>
+      <div class="field"><label>Cover / background image URL</label><input type="text" id="pCover" placeholder="https://…"><div class="hint">The banner image behind your profile header.</div></div>
+      <div class="field"><label>About us</label><textarea id="pAbout" rows="4" placeholder="Tell buyers who you are, what you specialize in, how long you've been doing this…"></textarea></div>
+      <div class="field"><label>Business address</label><input type="text" id="pAddress" placeholder="Street, city, state"></div>
+      <div class="field"><label>Email</label><input type="email" id="pEmail" disabled></div>
+      <button class="btn btn-primary" id="saveProfileBtn">Save changes</button>
+      <a href="#" class="btn btn-outline" id="viewProfileLink" target="_blank" style="margin-left:.6rem;">View public profile</a>
+      <div class="msg" id="profileMsg"></div>
+    </div>
+
+    <div class="profile-card" id="payoutCard" style="margin-top:1.6rem;">
+      <div class="section-head" style="margin-bottom:1rem;"><h2 style="font-size:1.1rem;">Payout account</h2></div>
+
+      <div id="payoutConnected" style="display:none;">
+        <div class="msg info" style="display:block;">
+          Payouts connected — <span id="payoutAccountName"></span>, account ending in <span id="payoutLast4"></span>.
+        </div>
+        <button class="btn btn-outline btn-sm" id="reconnectPayoutBtn" style="margin-top:.8rem;">Change bank account</button>
+      </div>
+
+      <div id="payoutSetupForm">
+        <div class="field"><label>Bank</label>
+          <select id="payoutBank"><option value="">Loading banks…</option></select>
+        </div>
+        <div class="field"><label>Account number</label><input type="text" id="payoutAccountNumber" placeholder="0123456789" maxlength="10"></div>
+        <button type="button" class="btn btn-outline" id="verifyAccountBtn">Verify account</button>
+        <div id="verifiedNameRow" style="display:none; margin:.9rem 0;">
+          <div class="field"><label>Confirm this is you</label><input type="text" id="verifiedAccountName" disabled></div>
+          <button type="button" class="btn btn-primary" id="confirmPayoutBtn">Save payout account</button>
+        </div>
+        <div class="msg" id="payoutMsg"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer></footer>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import {
+    getDatabase, ref, get, set, push, update, remove, onValue, query, orderByChild, equalTo, off
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+  const functionsClient = getFunctions(app);
+
+  let currentUser = null;
+  let myListings = {};
+  let myOffers = {};
+  let myEvents = [];
+  let myChats = {};
+  let verifiedAccountData = null; // holds {accountNumber, bankCode, accountName} between verify and save
+
+  function formatPrice(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v || 0); }
+
+  // ---- Auth gate ----
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    const uSnap = await get(ref(db, `users/${user.uid}`));
+    if (!uSnap.exists() || uSnap.val().role !== 'seller') { window.location.href = 'buyer-dashboard.html'; return; }
+    const u = uSnap.val();
+    if (u.status !== 'approved') { window.location.href = 'pending-approval.html'; return; }
+    currentUser = user;
+    document.getElementById('brandPill').textContent = u.displayName || user.email;
+    document.getElementById('pName').value = u.displayName || '';
+    document.getElementById('pLogo').value = u.logoUrl || '';
+    document.getElementById('pCover').value = u.coverImageUrl || '';
+    document.getElementById('pAbout').value = u.aboutUs || '';
+    document.getElementById('pAddress').value = u.businessAddress || '';
+    document.getElementById('pEmail').value = u.email || '';
+    document.getElementById('viewProfileLink').href = `seller-profile.html?sellerId=${user.uid}`;
+    renderPayoutStatus(u);
+    loadListings();
+    loadOffers();
+    loadEvents();
+    loadChatsUnread();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+
+  // ---- Tabs ----
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // ---- Listings ----
+  const listingFormCard = document.getElementById('listingFormCard');
+  const listingForm = document.getElementById('listingForm');
+  const listingMsg = document.getElementById('listingMsg');
+
+  document.getElementById('newListingBtn').addEventListener('click', () => {
+    listingForm.reset();
+    document.getElementById('editingId').value = '';
+    document.getElementById('listingSubmitBtn').textContent = 'Post listing';
+    listingFormCard.classList.add('open');
+  });
+  document.getElementById('cancelListingBtn').addEventListener('click', () => listingFormCard.classList.remove('open'));
+
+  function loadListings() {
+    const q = query(ref(db, 'properties'), orderByChild('sellerId'), equalTo(currentUser.uid));
+    onValue(q, (snap) => {
+      myListings = {};
+      if (snap.exists()) snap.forEach(child => { myListings[child.key] = child.val(); });
+      renderListings();
+      renderOverview();
+    });
+  }
+
+  function viewsFor(id) { return myEvents.filter(e => e.propertyId === id && e.type === 'view').length; }
+  function clicksFor(id) { return myEvents.filter(e => e.propertyId === id && e.type === 'purchase_click').length; }
+
+  function renderListings() {
+    const grid = document.getElementById('listingGrid');
+    const ids = Object.keys(myListings);
+    if (!ids.length) { grid.innerHTML = '<div class="empty">No listings yet — post your first property above.</div>'; return; }
+    grid.innerHTML = ids.map(id => {
+      const p = myListings[id];
+      const img = (p.images && p.images[0]) || 'https://via.placeholder.com/400x300?text=Dominion+Home';
+      return `
+        <div class="listing-card">
+          <div class="listing-img" style="background-image:url('${img}')"><span class="status-pill">${p.status || 'active'}</span></div>
+          <div class="listing-body">
+            <div class="listing-price">${formatPrice(p.price)}</div>
+            <div class="listing-loc">${p.location}</div>
+            <div class="listing-stats"><span><i class="fas fa-eye"></i> ${viewsFor(id)} views</span><span><i class="fas fa-hand-pointer"></i> ${clicksFor(id)} clicks</span></div>
+            <div class="listing-actions">
+              <select class="status-select" data-id="${id}">
+                <option value="active" ${p.status === 'active' || !p.status ? 'selected' : ''}>Active</option>
+                <option value="pending_sale" ${p.status === 'pending_sale' ? 'selected' : ''}>Pending sale</option>
+                <option value="sold" ${p.status === 'sold' ? 'selected' : ''}>Sold</option>
+                <option value="draft" ${p.status === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
+              </select>
+              <button class="btn btn-outline btn-sm" data-edit="${id}">Edit</button>
+              <button class="btn btn-red btn-sm" data-delete="${id}">Delete</button>
+              <a href="property-detail.html?id=${id}" class="btn btn-outline btn-sm" target="_blank">View</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.status-select').forEach(sel => {
+      sel.addEventListener('change', () => update(ref(db, `properties/${sel.dataset.id}`), { status: sel.value }));
+    });
+    grid.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEdit(btn.dataset.edit)));
+    grid.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteListing(btn.dataset.delete)));
+  }
+
+  function openEdit(id) {
+    const p = myListings[id];
+    document.getElementById('editingId').value = id;
+    document.getElementById('fListingType').value = p.listingType || 'buy';
+    document.getElementById('fPropertyType').value = p.propertyType || 'House';
+    document.getElementById('fPrice').value = p.price || '';
+    document.getElementById('fLocation').value = p.location || '';
+    document.getElementById('fBedrooms').value = p.bedrooms || '';
+    document.getElementById('fBathrooms').value = p.bathrooms || '';
+    document.getElementById('fArea').value = p.area || '';
+    document.getElementById('fFeatured').value = p.isFeatured ? 'true' : 'false';
+    document.getElementById('fDescription').value = p.description || '';
+    document.getElementById('fImages').value = (p.images || []).join('\n');
+    document.getElementById('fFeatures').value = (p.features || []).join(', ');
+    document.getElementById('fLat').value = p.lat || '';
+    document.getElementById('fLng').value = p.lng || '';
+    document.getElementById('listingSubmitBtn').textContent = 'Save changes';
+    listingFormCard.classList.add('open');
+    document.querySelector('[data-tab="listings"]').click();
+    listingFormCard.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function deleteListing(id) {
+    if (!confirm('Delete this listing? This cannot be undone.')) return;
+    await remove(ref(db, `properties/${id}`));
+  }
+
+  listingForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editingId').value;
+    const uSnap = await get(ref(db, `users/${currentUser.uid}`));
+    const sellerName = uSnap.exists() ? (uSnap.val().displayName || currentUser.email) : currentUser.email;
+
+    const images = document.getElementById('fImages').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const features = document.getElementById('fFeatures').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    const data = {
+      listingType: document.getElementById('fListingType').value,
+      propertyType: document.getElementById('fPropertyType').value,
+      price: parseFloat(document.getElementById('fPrice').value) || 0,
+      location: document.getElementById('fLocation').value.trim(),
+      bedrooms: parseInt(document.getElementById('fBedrooms').value) || 0,
+      bathrooms: parseFloat(document.getElementById('fBathrooms').value) || 0,
+      area: parseInt(document.getElementById('fArea').value) || 0,
+      isFeatured: document.getElementById('fFeatured').value === 'true',
+      description: document.getElementById('fDescription').value.trim(),
+      images, features,
+      sellerId: currentUser.uid, sellerName
+    };
+    const lat = parseFloat(document.getElementById('fLat').value);
+    const lng = parseFloat(document.getElementById('fLng').value);
+    if (!isNaN(lat)) data.lat = lat;
+    if (!isNaN(lng)) data.lng = lng;
+
+    try {
+      if (id) {
+        await update(ref(db, `properties/${id}`), data);
+      } else {
+        data.status = 'active';
+        data.createdAt = new Date().toISOString();
+        const newRef = push(ref(db, 'properties'));
+        await set(newRef, data);
+      }
+      listingMsg.className = 'msg info';
+      listingMsg.textContent = 'Saved.';
+      setTimeout(() => { listingFormCard.classList.remove('open'); listingMsg.className = 'msg'; }, 900);
+    } catch (err) {
+      listingMsg.className = 'msg error';
+      listingMsg.textContent = err.message.replace('Firebase: ', '');
+    }
+  });
+
+  // ---- Offers ----
+  let offerListenerIds = new Set();
+  function loadOffers() {
+    onValue(ref(db, `userOffers/${currentUser.uid}`), (idxSnap) => {
+      const offerIds = idxSnap.exists() ? Object.keys(idxSnap.val()) : [];
+      offerListenerIds.forEach(id => {
+        if (!offerIds.includes(id)) { off(ref(db, `offers/${id}`)); offerListenerIds.delete(id); delete myOffers[id]; }
+      });
+      offerIds.forEach(id => {
+        if (offerListenerIds.has(id)) return;
+        offerListenerIds.add(id);
+        onValue(ref(db, `offers/${id}`), (oSnap) => {
+          if (oSnap.exists()) myOffers[id] = oSnap.val();
+          else delete myOffers[id];
+          renderOffers();
+          renderOverview();
+        });
+      });
+      renderOffers();
+      renderOverview();
+    });
+  }
+
+  async function renderOffers() {
+    const list = document.getElementById('offersList');
+    const ids = Object.keys(myOffers).sort((a, b) => (myOffers[b].createdAt || 0) - (myOffers[a].createdAt || 0));
+    if (!ids.length) { list.innerHTML = '<div class="empty">No offers yet.</div>'; return; }
+    list.innerHTML = ids.map(id => {
+      const o = myOffers[id];
+      const prop = myListings[o.propertyId];
+      return `
+        <div class="offer-row" data-id="${id}">
+          <div class="offer-info">
+            <div class="prop">${prop ? prop.location : 'Property'}</div>
+            <div class="buyer">from ${o.buyerName || 'Buyer'}</div>
+          </div>
+          <div class="offer-amount">${formatPrice(o.amount)}</div>
+          <span class="offer-pill ${o.status}">${o.status}${o.status === 'countered' ? ' · ' + formatPrice(o.counterAmount) : ''}</span>
+          <div class="offer-actions">
+            ${o.status === 'pending' ? `
+              <button class="btn btn-green btn-sm" data-action="accept">Accept</button>
+              <button class="btn btn-red btn-sm" data-action="reject">Reject</button>
+              <input type="number" class="counter-input" placeholder="Counter $">
+              <button class="btn btn-amber btn-sm" data-action="counter">Send</button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    list.querySelectorAll('.offer-row').forEach(row => {
+      const id = row.dataset.id;
+      row.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const action = btn.dataset.action;
+          if (action === 'accept') await update(ref(db, `offers/${id}`), { status: 'accepted', updatedAt: Date.now() });
+          if (action === 'reject') await update(ref(db, `offers/${id}`), { status: 'rejected', updatedAt: Date.now() });
+          if (action === 'counter') {
+            const val = parseFloat(row.querySelector('.counter-input').value);
+            if (!val) return;
+            await update(ref(db, `offers/${id}`), { status: 'countered', counterAmount: val, updatedAt: Date.now() });
+          }
+        });
+      });
+    });
+  }
+
+  // ---- Analytics events ----
+  function loadEvents() {
+    onValue(ref(db, 'analyticsEvents'), (snap) => {
+      myEvents = snap.exists() ? Object.values(snap.val()) : [];
+      renderListings();
+      renderOverview();
+    }, () => { myEvents = []; });
+  }
+
+  // ---- Chats (for unread count only) ----
+  let chatListenerIdsD = new Set();
+  function loadChatsUnread() {
+    onValue(ref(db, `userChats/${currentUser.uid}`), (idxSnap) => {
+      const chatIds = idxSnap.exists() ? Object.keys(idxSnap.val()) : [];
+      chatListenerIdsD.forEach(id => {
+        if (!chatIds.includes(id)) { off(ref(db, `chats/${id}`)); chatListenerIdsD.delete(id); delete myChats[id]; }
+      });
+      chatIds.forEach(id => {
+        if (chatListenerIdsD.has(id)) return;
+        chatListenerIdsD.add(id);
+        onValue(ref(db, `chats/${id}`), (cSnap) => {
+          if (cSnap.exists()) myChats[id] = cSnap.val();
+          else delete myChats[id];
+          renderOverview();
+        });
+      });
+      renderOverview();
+    });
+  }
+
+  function renderOverview() {
+    const ids = Object.keys(myListings);
+    document.getElementById('ovListings').textContent = ids.length;
+    document.getElementById('ovPending').textContent = Object.values(myOffers).filter(o => o.status === 'pending').length;
+    document.getElementById('ovViews').textContent = ids.reduce((sum, id) => sum + viewsFor(id), 0);
+    document.getElementById('ovClicks').textContent = ids.reduce((sum, id) => sum + clicksFor(id), 0);
+    const unread = Object.values(myChats).filter(c => c.sellerHasUnread).length;
+    document.getElementById('ovUnread').textContent = unread;
+    document.getElementById('overviewNote').style.display = ids.length ? 'none' : 'block';
+
+    const pendingCount = Object.values(myOffers).filter(o => o.status === 'pending').length;
+    const badge = document.getElementById('pendingOfferBadge');
+    if (pendingCount) { badge.style.display = 'inline-block'; badge.textContent = pendingCount; }
+    else badge.style.display = 'none';
+  }
+
+  // ---- Profile ----
+  document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+    const profileMsg = document.getElementById('profileMsg');
+    try {
+      await update(ref(db, `users/${currentUser.uid}`), {
+        displayName: document.getElementById('pName').value.trim(),
+        logoUrl: document.getElementById('pLogo').value.trim(),
+        coverImageUrl: document.getElementById('pCover').value.trim(),
+        aboutUs: document.getElementById('pAbout').value.trim(),
+        businessAddress: document.getElementById('pAddress').value.trim()
+      });
+      document.getElementById('brandPill').textContent = document.getElementById('pName').value.trim();
+      profileMsg.className = 'msg info';
+      profileMsg.textContent = 'Profile updated. Note: listings you\'ve already posted keep their original brand name — edit them individually to update it.';
+    } catch (err) {
+      profileMsg.className = 'msg error';
+      profileMsg.textContent = err.message.replace('Firebase: ', '');
+    }
+  });
+
+  // ---- Payout account (Paystack) ----
+  function renderPayoutStatus(u) {
+    const connectedBlock = document.getElementById('payoutConnected');
+    const setupForm = document.getElementById('payoutSetupForm');
+    if (u.paystackSubaccountCode) {
+      connectedBlock.style.display = 'block';
+      setupForm.style.display = 'none';
+      document.getElementById('payoutAccountName').textContent = u.paystackAccountName || '—';
+      document.getElementById('payoutLast4').textContent = u.paystackAccountNumberLast4 || '····';
+    } else {
+      connectedBlock.style.display = 'none';
+      setupForm.style.display = 'block';
+      loadBanks();
+    }
+  }
+
+  document.getElementById('reconnectPayoutBtn').addEventListener('click', () => {
+    document.getElementById('payoutConnected').style.display = 'none';
+    document.getElementById('payoutSetupForm').style.display = 'block';
+    loadBanks();
+  });
+
+  let banksLoaded = false;
+  async function loadBanks() {
+    if (banksLoaded) return;
+    const select = document.getElementById('payoutBank');
+    try {
+      const listBanks = httpsCallable(functionsClient, 'listBanks');
+      const result = await listBanks();
+      select.innerHTML = '<option value="">Select your bank</option>' +
+        result.data.banks.map(b => `<option value="${b.code}">${b.name}</option>`).join('');
+      banksLoaded = true;
+    } catch (err) {
+      select.innerHTML = '<option value="">Could not load banks — try again shortly</option>';
+      console.error('[Dominion] listBanks failed (payment functions may not be deployed yet):', err);
+    }
+  }
+
+  document.getElementById('verifyAccountBtn').addEventListener('click', async () => {
+    const payoutMsg = document.getElementById('payoutMsg');
+    const bankCode = document.getElementById('payoutBank').value;
+    const accountNumber = document.getElementById('payoutAccountNumber').value.trim();
+    if (!bankCode || accountNumber.length < 10) {
+      payoutMsg.className = 'msg error';
+      payoutMsg.textContent = 'Pick a bank and enter a valid 10-digit account number.';
+      return;
+    }
+    payoutMsg.className = 'msg';
+    payoutMsg.textContent = '';
+    try {
+      const resolveBankAccount = httpsCallable(functionsClient, 'resolveBankAccount');
+      const result = await resolveBankAccount({ accountNumber, bankCode });
+      verifiedAccountData = { accountNumber, bankCode, accountName: result.data.accountName };
+      document.getElementById('verifiedAccountName').value = result.data.accountName;
+      document.getElementById('verifiedNameRow').style.display = 'block';
+    } catch (err) {
+      payoutMsg.className = 'msg error';
+      payoutMsg.textContent = err.message || 'Could not verify this account. Double-check the number and bank.';
+    }
+  });
+
+  document.getElementById('confirmPayoutBtn').addEventListener('click', async () => {
+    const payoutMsg = document.getElementById('payoutMsg');
+    if (!verifiedAccountData) return;
+    payoutMsg.className = 'msg';
+    payoutMsg.textContent = 'Connecting…';
+    try {
+      const createSellerSubaccount = httpsCallable(functionsClient, 'createSellerSubaccount');
+      await createSellerSubaccount(verifiedAccountData);
+      const uSnap = await get(ref(db, `users/${currentUser.uid}`));
+      renderPayoutStatus(uSnap.val());
+      payoutMsg.className = 'msg info';
+      payoutMsg.textContent = 'Payout account connected.';
+    } catch (err) {
+      payoutMsg.className = 'msg error';
+      payoutMsg.textContent = err.message || 'Could not connect this account.';
+    }
+  });
+</script>
+</body>
+</html>

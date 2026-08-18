@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My dashboard — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3; --red:#B3413A; --red-tint:#F6E5E3; --amber-tint:#F6EEDD;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink);}
+  a{color:inherit; text-decoration:none;}
+  .container{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  .navbar{border-bottom:1px solid var(--line); padding:1rem 0; background:var(--paper-raise);}
+  .nav-container{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;}
+  .logo{display:flex; flex-direction:column; line-height:1;}
+  .logo .mark{font-family:var(--mono); font-size:.62rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.15rem;}
+  .nav-right{display:flex; align-items:center; gap:.9rem;}
+  .name-pill{font-size:.85rem; color:var(--ink-soft);}
+  .logout{background:none; border:1px solid var(--line); padding:.5rem 1.1rem; border-radius:100px; cursor:pointer; font-size:.85rem;}
+  .logout:hover{border-color:var(--brass);}
+  .btn{font-weight:600; font-size:.86rem; border-radius:100px; cursor:pointer; border:1.5px solid transparent; padding:.6rem 1.2rem; transition:.2s;}
+  .btn-primary{background:var(--emerald); color:#fff;}
+  .btn-primary:hover{background:var(--emerald-deep);}
+  .btn-outline{background:transparent; border-color:var(--ink); color:var(--ink);}
+  .btn-outline:hover{background:var(--ink); color:var(--paper);}
+  .btn-sm{padding:.4rem .9rem; font-size:.78rem; border-radius:8px;}
+  .btn-red{background:var(--red-tint); color:var(--red); border:none;}
+  .btn-green{background:var(--emerald-tint); color:var(--emerald-deep); border:none;}
+
+  .tabs{display:flex; gap:.5rem; margin:1.6rem 0; flex-wrap:wrap;}
+  .tabs button{background:var(--paper-raise); border:1px solid var(--line); color:var(--ink-soft); padding:.6rem 1.2rem; border-radius:100px; cursor:pointer; font-size:.86rem; font-weight:600;}
+  .tabs button.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .tab-badge{background:var(--brass); color:#241C0F; border-radius:100px; font-size:.68rem; padding:.1rem .45rem; margin-left:.4rem;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .section-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem; flex-wrap:wrap; gap:.8rem;}
+  .section-head h2{font-family:var(--display); font-weight:500; font-size:1.3rem;}
+
+  .stats-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:2rem;}
+  .stat{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.2rem;}
+  .stat .num{font-family:var(--mono); font-size:1.7rem; font-weight:600;}
+  .stat .lab{font-size:.78rem; color:var(--ink-soft); margin-top:.2rem;}
+
+  .prop-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.2rem;}
+  .prop-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; overflow:hidden; cursor:pointer; transition:.25s; position:relative;}
+  .prop-card:hover{transform:translateY(-4px); box-shadow:0 16px 28px -14px rgba(22,36,30,.25);}
+  .prop-img{height:150px; background-size:cover; background-position:center;}
+  .prop-body{padding:1rem;}
+  .prop-price{font-family:var(--mono); font-weight:600;}
+  .prop-loc{font-size:.8rem; color:var(--ink-soft);}
+  .unsave-btn{position:absolute; top:10px; right:10px; background:rgba(255,255,255,.9); border:none; width:32px; height:32px; border-radius:50%; cursor:pointer; color:var(--red);}
+
+  .search-form{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.4rem; margin-bottom:1.6rem;}
+  .search-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.8rem; margin-bottom:.9rem;}
+  .search-grid input{padding:.6rem .8rem; border:1.5px solid var(--line); border-radius:10px; font-family:var(--body); background:var(--paper); outline:none;}
+  .search-grid input:focus{border-color:var(--brass);}
+  .saved-search-row{background:var(--paper-raise); border:1px solid var(--line); border-radius:12px; padding:.9rem 1.2rem; margin-bottom:.7rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.6rem;}
+  .saved-search-row .name{font-weight:700; font-size:.9rem;}
+  .saved-search-row .filters{font-size:.78rem; color:var(--ink-soft); font-family:var(--mono);}
+
+  .offer-row{background:var(--paper-raise); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.3rem; margin-bottom:.9rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;}
+  .offer-info .prop{font-weight:700; font-size:.9rem;}
+  .offer-info .seller{font-size:.8rem; color:var(--ink-soft);}
+  .offer-amount{font-family:var(--mono); font-size:1.2rem; font-weight:600;}
+  .offer-pill{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; padding:.25rem .7rem; border-radius:100px;}
+  .offer-pill.pending{background:var(--amber-tint); color:#7A5B12;}
+  .offer-pill.accepted{background:var(--emerald-tint); color:var(--emerald-deep);}
+  .offer-pill.rejected{background:var(--red-tint); color:var(--red);}
+  .offer-pill.countered{background:var(--brass-tint); color:#6B4E23;}
+
+  .empty{color:var(--ink-soft); font-size:.9rem; padding:2rem 0; text-align:center;}
+  footer{height:3rem;}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a>
+    <div class="nav-right">
+      <span class="name-pill" id="namePill">—</span>
+      <a href="chat.html" class="btn btn-outline btn-sm"><i class="fas fa-comment"></i> Messages</a>
+      <a href="listings.html" class="btn btn-primary btn-sm">Browse listings</a>
+      <button class="logout" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="tabs">
+    <button class="active" data-tab="saved">Saved properties</button>
+    <button data-tab="searches">Saved searches</button>
+    <button data-tab="offers">My offers <span class="tab-badge" id="activeOfferBadge" style="display:none;">0</span></button>
+    <button data-tab="recent">Recently viewed</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="num" id="statSaved">–</div><div class="lab">Saved properties</div></div>
+    <div class="stat"><div class="num" id="statOffers">–</div><div class="lab">Active offers</div></div>
+    <div class="stat"><div class="num" id="statSearches">–</div><div class="lab">Saved searches</div></div>
+    <div class="stat"><div class="num" id="statUnread">–</div><div class="lab">Unread messages</div></div>
+  </div>
+
+  <!-- Saved properties -->
+  <section class="panel active" id="panel-saved">
+    <div class="section-head"><h2>Saved properties</h2></div>
+    <div class="prop-grid" id="savedGrid"><div class="empty">Loading…</div></div>
+  </section>
+
+  <!-- Saved searches -->
+  <section class="panel" id="panel-searches">
+    <div class="section-head"><h2>Saved searches</h2></div>
+    <div class="search-form">
+      <div class="search-grid">
+        <input type="text" id="sName" placeholder="Search name">
+        <input type="text" id="sLocation" placeholder="Location">
+        <input type="number" id="sMinPrice" placeholder="Min price">
+        <input type="number" id="sMaxPrice" placeholder="Max price">
+        <input type="number" id="sBedrooms" placeholder="Min bedrooms">
+      </div>
+      <button class="btn btn-primary btn-sm" id="addSearchBtn">Save this search</button>
+    </div>
+    <div id="searchesList"><div class="empty">No saved searches yet.</div></div>
+  </section>
+
+  <!-- Offers -->
+  <section class="panel" id="panel-offers">
+    <div class="section-head"><h2>My offers</h2></div>
+    <div id="offersList"><div class="empty">Loading…</div></div>
+  </section>
+
+  <!-- Recently viewed -->
+  <section class="panel" id="panel-recent">
+    <div class="section-head"><h2>Recently viewed</h2></div>
+    <div class="prop-grid" id="recentGrid"><div class="empty">Nothing viewed yet — browse the listings page.</div></div>
+  </section>
+
+  <footer></footer>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import {
+    getDatabase, ref, get, set, push, update, remove, onValue, query, orderByChild, equalTo
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  let currentUser = null;
+  let myOffers = {};
+  let myChats = {};
+  let myTransactions = {}; // keyed by offerId
+  let reviewedTransactionIds = new Set();
+
+  function formatPrice(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v || 0); }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    const uSnap = await get(ref(db, `users/${user.uid}`));
+    if (!uSnap.exists()) { window.location.href = 'login.html'; return; }
+    const u = uSnap.val();
+    if (u.role === 'seller') { window.location.href = u.status === 'approved' ? 'dashboard.html' : 'pending-approval.html'; return; }
+    currentUser = user;
+    document.getElementById('namePill').textContent = u.displayName || user.email;
+    loadSaved();
+    loadSearches();
+    loadOffers();
+    loadTransactionsAndReviews();
+    loadChatsUnread();
+    loadRecentlyViewed();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => { await signOut(auth); window.location.href = 'index.html'; });
+
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  function propCard(id, p, { unsave } = {}) {
+    const img = (p.images && p.images[0]) || 'https://via.placeholder.com/400x300?text=Dominion+Home';
+    return `
+      <div class="prop-card" data-id="${id}">
+        ${unsave ? `<button class="unsave-btn" data-unsave="${id}"><i class="fas fa-heart"></i></button>` : ''}
+        <div class="prop-img" style="background-image:url('${img}')"></div>
+        <div class="prop-body">
+          <div class="prop-price">${formatPrice(p.price)}</div>
+          <div class="prop-loc">${p.location || ''}</div>
+        </div>
+      </div>
+    `;
+  }
+  function wireCards(container) {
+    container.querySelectorAll('.prop-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-unsave]')) return;
+        window.location.href = `property-detail.html?id=${card.dataset.id}`;
+      });
+    });
+  }
+
+  // ---- Saved properties ----
+  function loadSaved() {
+    onValue(ref(db, `users/${currentUser.uid}/savedProperties`), async (snap) => {
+      const grid = document.getElementById('savedGrid');
+      if (!snap.exists()) {
+        grid.innerHTML = '<div class="empty">Nothing saved yet — tap the heart on any property to save it here.</div>';
+        document.getElementById('statSaved').textContent = 0;
+        return;
+      }
+      const ids = Object.keys(snap.val());
+      document.getElementById('statSaved').textContent = ids.length;
+      const props = await Promise.all(ids.map(async id => {
+        const pSnap = await get(ref(db, `properties/${id}`));
+        return pSnap.exists() ? [id, pSnap.val()] : null;
+      }));
+      const valid = props.filter(Boolean);
+      if (!valid.length) { grid.innerHTML = '<div class="empty">Your saved properties may have been removed by their sellers.</div>'; return; }
+      grid.innerHTML = valid.map(([id, p]) => propCard(id, p, { unsave: true })).join('');
+      wireCards(grid);
+      grid.querySelectorAll('[data-unsave]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await set(ref(db, `users/${currentUser.uid}/savedProperties/${btn.dataset.unsave}`), null);
+        });
+      });
+    });
+  }
+
+  // ---- Saved searches ----
+  function loadSearches() {
+    onValue(ref(db, `users/${currentUser.uid}/savedSearches`), (snap) => {
+      const list = document.getElementById('searchesList');
+      document.getElementById('statSearches').textContent = snap.exists() ? Object.keys(snap.val()).length : 0;
+      if (!snap.exists()) { list.innerHTML = '<div class="empty">No saved searches yet.</div>'; return; }
+      const entries = Object.entries(snap.val());
+      list.innerHTML = entries.map(([id, s]) => `
+        <div class="saved-search-row">
+          <div>
+            <div class="name">${s.name}</div>
+            <div class="filters">${[s.location, s.minPrice ? 'min ' + formatPrice(s.minPrice) : '', s.maxPrice ? 'max ' + formatPrice(s.maxPrice) : '', s.bedrooms ? s.bedrooms + '+ bed' : ''].filter(Boolean).join(' · ') || 'No filters'}</div>
+          </div>
+          <div style="display:flex; gap:.5rem;">
+            <a class="btn btn-outline btn-sm" href="listings.html?location=${encodeURIComponent(s.location || '')}&minPrice=${s.minPrice || ''}&maxPrice=${s.maxPrice || ''}&bedrooms=${s.bedrooms || ''}">Run search</a>
+            <button class="btn btn-red btn-sm" data-del="${id}">Delete</button>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('[data-del]').forEach(btn => {
+        btn.addEventListener('click', () => remove(ref(db, `users/${currentUser.uid}/savedSearches/${btn.dataset.del}`)));
+      });
+    });
+  }
+  document.getElementById('addSearchBtn').addEventListener('click', async () => {
+    const name = document.getElementById('sName').value.trim();
+    if (!name) { alert('Give this search a name first.'); return; }
+    const newRef = push(ref(db, `users/${currentUser.uid}/savedSearches`));
+    await set(newRef, {
+      name,
+      location: document.getElementById('sLocation').value.trim(),
+      minPrice: parseFloat(document.getElementById('sMinPrice').value) || null,
+      maxPrice: parseFloat(document.getElementById('sMaxPrice').value) || null,
+      bedrooms: parseInt(document.getElementById('sBedrooms').value) || null,
+      createdAt: Date.now()
+    });
+    ['sName', 'sLocation', 'sMinPrice', 'sMaxPrice', 'sBedrooms'].forEach(id => document.getElementById(id).value = '');
+  });
+
+  // ---- Offers ----
+  // Fixed: transactions/orderByChild('buyerId') used to query the
+  // top-level 'transactions' node directly, which the current rules
+  // restrict to admins only. Now reads this buyer's own transaction IDs
+  // from userTransactions/{uid} first, then fetches each one individually
+  // (permitted under the existing transactions/$transactionId rule).
+  function loadTransactionsAndReviews() {
+    onValue(ref(db, `userTransactions/${currentUser.uid}`), async (idxSnap) => {
+      myTransactions = {};
+      if (idxSnap.exists()) {
+        const txIds = Object.keys(idxSnap.val());
+        const txs = await Promise.all(txIds.map(async id => {
+          const tSnap = await get(ref(db, `transactions/${id}`));
+          return tSnap.exists() ? { id, ...tSnap.val() } : null;
+        }));
+        txs.filter(Boolean).forEach(tx => { myTransactions[tx.offerId] = tx; });
+      }
+      renderOffers();
+    });
+
+    // 'reviews' still has an open top-level read rule (".read": true), so
+    // this query is unaffected by the tightened rules and needs no change.
+    const reviewQuery = query(ref(db, 'reviews'), orderByChild('buyerId'), equalTo(currentUser.uid));
+    onValue(reviewQuery, (snap) => {
+      reviewedTransactionIds = new Set();
+      if (snap.exists()) snap.forEach(child => reviewedTransactionIds.add(child.val().transactionId));
+      renderOffers();
+    });
+  }
+
+  // Fixed: same issue — offers/orderByChild('buyerId') queried the
+  // top-level 'offers' node directly, now admin-only. Reads this buyer's
+  // own offer IDs from userOffers/{uid} first, then fetches each offer
+  // individually (permitted under the existing offers/$offerId rule).
+  function loadOffers() {
+    onValue(ref(db, `userOffers/${currentUser.uid}`), async (idxSnap) => {
+      myOffers = {};
+      if (idxSnap.exists()) {
+        const offerIds = Object.keys(idxSnap.val());
+        const offers = await Promise.all(offerIds.map(async id => {
+          const oSnap = await get(ref(db, `offers/${id}`));
+          return oSnap.exists() ? { id, data: oSnap.val() } : null;
+        }));
+        offers.filter(Boolean).forEach(({ id, data }) => {
+          // Only offers this user made as the buyer belong on this page —
+          // userOffers/{uid} also includes offers where uid is the seller.
+          if (data.buyerId === currentUser.uid) myOffers[id] = data;
+        });
+      }
+      renderOffers();
+    });
+  }
+
+  async function renderOffers() {
+    const list = document.getElementById('offersList');
+    const ids = Object.keys(myOffers).sort((a, b) => (myOffers[b].createdAt || 0) - (myOffers[a].createdAt || 0));
+    const activeCount = Object.values(myOffers).filter(o => o.status === 'pending' || o.status === 'countered').length;
+    document.getElementById('statOffers').textContent = activeCount;
+    const badge = document.getElementById('activeOfferBadge');
+    if (activeCount) { badge.style.display = 'inline-block'; badge.textContent = activeCount; } else badge.style.display = 'none';
+
+    if (!ids.length) { list.innerHTML = '<div class="empty">You haven\'t made any offers yet.</div>'; return; }
+    const rows = await Promise.all(ids.map(async id => {
+      const o = myOffers[id];
+      const pSnap = await get(ref(db, `properties/${o.propertyId}`));
+      const p = pSnap.exists() ? pSnap.val() : null;
+      return { id, o, p };
+    }));
+    list.innerHTML = rows.map(({ id, o, p }) => {
+      const tx = myTransactions[id];
+      const canReview = tx && !reviewedTransactionIds.has(tx.id);
+      const alreadyReviewed = tx && reviewedTransactionIds.has(tx.id);
+      return `
+      <div class="offer-row" data-id="${id}">
+        <div class="offer-info">
+          <div class="prop">${p ? p.location : 'Property'}</div>
+          <div class="seller">to ${o.sellerId ? (p ? p.sellerName : 'Seller') : 'Seller'}</div>
+        </div>
+        <div class="offer-amount">${formatPrice(o.amount)}</div>
+        <span class="offer-pill ${o.status}">${o.status}${o.status === 'countered' ? ' · ' + formatPrice(o.counterAmount) : ''}</span>
+        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+          ${o.status === 'countered' ? `<button class="btn btn-green btn-sm" data-accept-counter="${id}">Accept</button><button class="btn btn-red btn-sm" data-decline-counter="${id}">Decline</button>` : ''}
+          ${p ? `<a class="btn btn-outline btn-sm" href="property-detail.html?id=${o.propertyId}">View</a>` : ''}
+          ${canReview ? `<button class="btn btn-primary btn-sm" data-review="${id}" data-tx="${tx.id}" data-seller="${o.sellerId}" data-prop="${o.propertyId}">Leave a review</button>` : ''}
+          ${alreadyReviewed ? `<span style="font-size:.78rem; color:var(--ink-soft);">✓ Reviewed</span>` : ''}
+        </div>
+      </div>
+      ${canReview ? `
+      <div class="review-form" id="reviewForm-${id}" style="display:none; background:var(--paper-raise); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem; margin:-.5rem 0 .9rem;">
+        <div style="display:flex; gap:.3rem; margin-bottom:.7rem;" class="star-picker" data-for="${id}">
+          ${[1,2,3,4,5].map(n => `<i class="far fa-star" data-star="${n}" style="cursor:pointer; color:var(--brass); font-size:1.1rem;"></i>`).join('')}
+        </div>
+        <textarea id="reviewText-${id}" rows="2" placeholder="How was the experience?" style="width:100%; padding:.6rem .8rem; border:1.5px solid var(--line); border-radius:10px; font-family:var(--body); margin-bottom:.7rem;"></textarea>
+        <button class="btn btn-primary btn-sm" data-submit-review="${id}">Submit review</button>
+      </div>` : ''}
+    `;
+    }).join('');
+
+    list.querySelectorAll('[data-review]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const formEl = document.getElementById(`reviewForm-${btn.dataset.review}`);
+        formEl.style.display = formEl.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+    let selectedRatings = {};
+    list.querySelectorAll('.star-picker').forEach(picker => {
+      const id = picker.dataset.for;
+      picker.querySelectorAll('[data-star]').forEach(star => {
+        star.addEventListener('click', () => {
+          const val = parseInt(star.dataset.star);
+          selectedRatings[id] = val;
+          picker.querySelectorAll('[data-star]').forEach(s => {
+            const on = parseInt(s.dataset.star) <= val;
+            s.className = on ? 'fas fa-star' : 'far fa-star';
+          });
+        });
+      });
+    });
+    list.querySelectorAll('[data-submit-review]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.submitReview;
+        const reviewBtn = list.querySelector(`[data-review="${id}"]`);
+        const rating = selectedRatings[id] || 5;
+        const text = document.getElementById(`reviewText-${id}`).value.trim();
+        const tx = myTransactions[id];
+        const newRef = push(ref(db, 'reviews'));
+        btn.disabled = true; btn.textContent = 'Submitting…';
+        try {
+          await set(newRef, {
+            transactionId: tx.id, propertyId: reviewBtn.dataset.prop, sellerId: reviewBtn.dataset.seller,
+            buyerId: currentUser.uid, rating, text, createdAt: Date.now()
+          });
+        } catch (err) {
+          alert(err.message.replace('Firebase: ', ''));
+          btn.disabled = false; btn.textContent = 'Submit review';
+        }
+      });
+    });
+
+    list.querySelectorAll('[data-accept-counter]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.acceptCounter;
+        const counterAmount = myOffers[id].counterAmount;
+        await update(ref(db, `offers/${id}`), { status: 'accepted', amount: counterAmount, updatedAt: Date.now() });
+      });
+    });
+    list.querySelectorAll('[data-decline-counter]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.declineCounter;
+        await update(ref(db, `offers/${id}`), { status: 'rejected', updatedAt: Date.now() });
+      });
+    });
+  }
+
+  // ---- Unread messages ----
+  // Fixed: same pattern again — chats/orderByChild('buyerId') queried the
+  // top-level 'chats' node directly, now admin-only. Reads this buyer's
+  // chat IDs from userChats/{uid} first, then fetches each chat by ID.
+  function loadChatsUnread() {
+    onValue(ref(db, `userChats/${currentUser.uid}`), async (idxSnap) => {
+      myChats = {};
+      if (idxSnap.exists()) {
+        const chatIds = Object.keys(idxSnap.val());
+        const chats = await Promise.all(chatIds.map(async id => {
+          const cSnap = await get(ref(db, `chats/${id}`));
+          return cSnap.exists() ? cSnap.val() : null;
+        }));
+        chats.filter(Boolean).forEach(c => { if (c.buyerId === currentUser.uid) myChats[c.id || Math.random()] = c; });
+      }
+      const unread = Object.values(myChats).filter(c => c.buyerHasUnread).length;
+      document.getElementById('statUnread').textContent = unread;
+    });
+  }
+
+  // ---- Recently viewed (localStorage) ----
+  async function loadRecentlyViewed() {
+    const grid = document.getElementById('recentGrid');
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem('dhh-recently-viewed') || '[]'); } catch {}
+    if (!ids.length) return;
+    const props = await Promise.all(ids.map(async id => {
+      const pSnap = await get(ref(db, `properties/${id}`));
+      return pSnap.exists() ? [id, pSnap.val()] : null;
+    }));
+    const valid = props.filter(Boolean);
+    if (!valid.length) return;
+    grid.innerHTML = valid.map(([id, p]) => propCard(id, p)).join('');
+    wireCards(grid);
+  }
+</script>
+</body>
+</html>

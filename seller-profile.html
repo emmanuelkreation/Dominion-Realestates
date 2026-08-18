@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller profile — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); line-height:1.55;}
+  a{color:inherit; text-decoration:none;}
+  .container{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  .navbar{position:sticky; top:0; z-index:100; background:rgba(247,244,236,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:.9rem 0;}
+  .nav-container{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;}
+  .logo{display:flex; flex-direction:column; line-height:1;}
+  .logo .mark{font-family:var(--mono); font-size:.64rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.25rem;}
+  .btn{font-weight:600; font-size:.88rem; border-radius:100px; cursor:pointer; border:1.5px solid transparent; padding:.6rem 1.3rem; transition:.2s;}
+  .btn-primary{background:var(--emerald); color:#fff;}
+  .btn-primary:hover{background:var(--emerald-deep);}
+  .btn-outline{background:transparent; border-color:var(--ink); color:var(--ink);}
+  .btn-outline:hover{background:var(--ink); color:var(--paper);}
+
+  .cover-banner{
+    height:220px; margin:0 -24px; background-size:cover; background-position:center;
+    background-color:var(--emerald-tint); position:relative; overflow:hidden;
+  }
+  .cover-banner::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(14,23,18,0) 40%, rgba(14,23,18,.35));}
+  .cover-banner.empty{background-image:linear-gradient(135deg, var(--emerald-tint), var(--brass-tint));}
+
+  .profile-header{
+    display:flex; gap:1.6rem; align-items:flex-end; padding:0 0 2rem; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); margin-bottom:2rem; margin-top:-56px; position:relative;
+  }
+  .avatar{
+    width:104px; height:104px; border-radius:50%; background:var(--emerald-tint); color:var(--emerald-deep);
+    display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:600; font-size:2.4rem;
+    flex-shrink:0; border:4px solid var(--paper); background-size:cover; background-position:center; overflow:hidden;
+  }
+  .profile-info{padding-bottom:.3rem;}
+  .profile-info h1{font-family:var(--display); font-weight:500; font-size:1.9rem;}
+  .profile-info .sub{color:var(--ink-soft); font-size:.9rem; margin-top:.3rem; display:flex; gap:1.2rem; flex-wrap:wrap;}
+  .profile-info .sub span{display:flex; align-items:center; gap:.4rem;}
+  .profile-info .sub i{color:var(--brass);}
+  .profile-actions{margin-left:auto; display:flex; gap:.7rem; padding-bottom:.3rem;}
+
+  .about-block{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.6rem; margin-bottom:2.4rem; color:var(--ink-soft); line-height:1.75; white-space:pre-line;}
+
+  .stats-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:2.4rem;}
+  .stat{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.2rem; text-align:center;}
+  .stat .num{font-family:var(--mono); font-size:1.6rem; font-weight:600;}
+  .stat .lab{font-size:.76rem; color:var(--ink-soft); margin-top:.2rem;}
+
+  .block-title{font-family:var(--display); font-weight:500; font-size:1.3rem; margin-bottom:1.1rem;}
+
+
+  .listing-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:1.4rem; margin-bottom:2.6rem;}
+  .listing-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; overflow:hidden; cursor:pointer; transition:.25s;}
+  .listing-card:hover{transform:translateY(-5px); box-shadow:0 18px 30px -14px rgba(22,36,30,.25);}
+  .listing-img{height:170px; background-size:cover; background-position:center; position:relative;}
+  .listing-type-badge{position:absolute; top:10px; left:10px; background:var(--ink); color:var(--paper); padding:.28rem .8rem; border-radius:4px; font-size:.66rem; font-family:var(--mono); text-transform:uppercase;}
+  .listing-type-badge.rent{background:var(--brass); color:#241C0F;}
+  .listing-type-badge.lease{background:var(--emerald);}
+  .listing-body{padding:1.1rem;}
+  .listing-price{font-family:var(--mono); font-weight:600; font-size:1.15rem;}
+  .listing-loc{font-size:.82rem; color:var(--ink-soft); margin:.3rem 0 .6rem;}
+  .listing-feat{display:flex; gap:.9rem; font-size:.78rem; color:var(--ink-soft);}
+  .listing-feat i{color:var(--emerald);}
+
+  .review-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:14px; padding:1.3rem; margin-bottom:.9rem;}
+  .review-stars{color:var(--brass); margin-bottom:.5rem; font-size:.85rem;}
+  .review-text{font-family:var(--display); font-style:italic; color:var(--ink); margin-bottom:.6rem;}
+  .review-author{font-size:.8rem; color:var(--ink-soft);}
+
+  .empty{color:var(--ink-soft); font-size:.9rem; padding:2rem 0; text-align:center; background:var(--paper-raise); border:1px dashed var(--line); border-radius:14px;}
+  footer{height:3rem;}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a>
+    <a href="listings.html" class="btn btn-outline">Browse listings</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="cover-banner empty" id="coverBanner"></div>
+  <div class="profile-header" id="profileHeader">
+    <div class="avatar" id="avatar">—</div>
+    <div class="profile-info">
+      <h1 id="sellerName">Loading…</h1>
+      <div class="sub">
+        <span id="sellerAddress" style="display:none;"><i class="fas fa-location-dot"></i> <span></span></span>
+        <span id="sellerSince"><i class="fas fa-calendar"></i> —</span>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn btn-primary" id="messageSellerBtn">Message seller</button>
+    </div>
+  </div>
+
+  <div class="about-block" id="aboutBlock" style="display:none;"></div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="num" id="statListings">–</div><div class="lab">Active listings</div></div>
+    <div class="stat"><div class="num" id="statRating">–</div><div class="lab">Average rating</div></div>
+    <div class="stat"><div class="num" id="statReviews">–</div><div class="lab">Reviews</div></div>
+  </div>
+
+  <div class="block-title">Listings from this seller</div>
+  <div class="listing-grid" id="listingGrid"><div class="empty">Loading…</div></div>
+
+  <div class="block-title">Reviews</div>
+  <div id="reviewsList"><div class="empty">No reviews yet — reviews appear here once a buyer completes a purchase with this seller.</div></div>
+
+  <footer></footer>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, set, push, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const params = new URLSearchParams(window.location.search);
+  const sellerId = params.get('sellerId');
+  let currentUser = null;
+  let sellerData = null;
+
+  function formatPrice(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v || 0); }
+  function getListingLabel(type) { return type === 'buy' ? 'For Sale' : type === 'rent' ? 'For Rent' : 'For Lease'; }
+
+  onAuthStateChanged(auth, (user) => { currentUser = user; });
+
+  if (!sellerId) {
+    document.getElementById('profileHeader').innerHTML = '<p>No seller specified.</p>';
+  } else {
+    loadSeller();
+  }
+
+  async function loadSeller() {
+    const uSnap = await get(ref(db, `users/${sellerId}`));
+    if (!uSnap.exists()) {
+      document.getElementById('sellerName').textContent = 'Seller not found';
+      return;
+    }
+    sellerData = uSnap.val();
+    const avatarEl = document.getElementById('avatar');
+    if (sellerData.logoUrl && /^https?:\/\//.test(sellerData.logoUrl)) {
+      avatarEl.style.backgroundImage = `url('${sellerData.logoUrl}')`;
+      avatarEl.textContent = '';
+    } else {
+      avatarEl.textContent = (sellerData.displayName || 'S').charAt(0).toUpperCase();
+    }
+    if (sellerData.coverImageUrl && /^https?:\/\//.test(sellerData.coverImageUrl)) {
+      const cover = document.getElementById('coverBanner');
+      cover.style.backgroundImage = `url('${sellerData.coverImageUrl}')`;
+      cover.classList.remove('empty');
+    }
+    if (sellerData.aboutUs) {
+      const aboutEl = document.getElementById('aboutBlock');
+      aboutEl.style.display = 'block';
+      aboutEl.textContent = sellerData.aboutUs;
+    }
+    document.getElementById('sellerName').textContent = sellerData.displayName || 'Property owner';
+    if (sellerData.businessAddress) {
+      const addrEl = document.getElementById('sellerAddress');
+      addrEl.style.display = 'flex';
+      addrEl.querySelector('span').textContent = sellerData.businessAddress;
+    }
+    document.getElementById('sellerSince').innerHTML = `<i class="fas fa-calendar"></i> Member since ${sellerData.createdAt ? new Date(sellerData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}`;
+
+    loadListings();
+    loadReviews();
+  }
+
+  async function loadListings() {
+    const grid = document.getElementById('listingGrid');
+    const q = query(ref(db, 'properties'), orderByChild('sellerId'), equalTo(sellerId));
+    const snap = await get(q);
+    if (!snap.exists()) {
+      grid.innerHTML = '<div class="empty">This seller hasn\'t posted any listings yet.</div>';
+      document.getElementById('statListings').textContent = 0;
+      return;
+    }
+    const items = [];
+    snap.forEach(child => { if (child.val().status !== 'draft') items.push({ id: child.key, ...child.val() }); });
+    document.getElementById('statListings').textContent = items.filter(p => p.status !== 'sold').length;
+    if (!items.length) { grid.innerHTML = '<div class="empty">This seller hasn\'t posted any listings yet.</div>'; return; }
+    grid.innerHTML = items.map(p => {
+      const img = (p.images && p.images[0]) || 'https://via.placeholder.com/400x300?text=Dominion+Home';
+      const typeClass = p.listingType === 'rent' ? 'rent' : p.listingType === 'lease' ? 'lease' : '';
+      return `
+        <div class="listing-card" data-id="${p.id}">
+          <div class="listing-img" style="background-image:url('${img}')"><span class="listing-type-badge ${typeClass}">${getListingLabel(p.listingType)}</span></div>
+          <div class="listing-body">
+            <div class="listing-price">${formatPrice(p.price)}</div>
+            <div class="listing-loc">${p.location}</div>
+            <div class="listing-feat">
+              <span><i class="fas fa-bed"></i> ${p.bedrooms ?? '–'}</span>
+              <span><i class="fas fa-bath"></i> ${p.bathrooms ?? '–'}</span>
+              <span><i class="fas fa-ruler-combined"></i> ${p.area || '–'} sqft</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    grid.querySelectorAll('.listing-card').forEach(card => {
+      card.addEventListener('click', () => window.location.href = `property-detail.html?id=${card.dataset.id}`);
+    });
+  }
+
+  async function loadReviews() {
+    const list = document.getElementById('reviewsList');
+    const q = query(ref(db, 'reviews'), orderByChild('sellerId'), equalTo(sellerId));
+    const snap = await get(q);
+    if (!snap.exists()) {
+      document.getElementById('statRating').textContent = '—';
+      document.getElementById('statReviews').textContent = 0;
+      return;
+    }
+    const reviews = [];
+    snap.forEach(child => reviews.push(child.val()));
+    const avg = reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length;
+    document.getElementById('statRating').textContent = avg.toFixed(1);
+    document.getElementById('statReviews').textContent = reviews.length;
+    list.innerHTML = reviews.map(r => `
+      <div class="review-card">
+        <div class="review-stars">${'★'.repeat(Math.round(r.rating || 0))}${'☆'.repeat(5 - Math.round(r.rating || 0))}</div>
+        <div class="review-text">"${r.text || ''}"</div>
+        <div class="review-author">— Verified buyer</div>
+      </div>
+    `).join('');
+  }
+
+  // Fixed: this used to run a broad orderByChild('buyerId') query directly
+  // against the top-level 'chats' node, which the current rules block for
+  // non-admins (permission_denied, silently swallowed since there was no
+  // try/catch — that's why the button did nothing). Now mirrors
+  // property-detail.html: look up this buyer's own chat IDs from their
+  // userChats index, fetch each by ID (individually permitted under the
+  // existing chats/$chatId rule), and write the same index entries when
+  // creating a new chat so it's discoverable by chat.html afterward.
+  document.getElementById('messageSellerBtn').addEventListener('click', async () => {
+    if (!currentUser) { window.location.href = `login.html?redirect=seller-profile.html?sellerId=${sellerId}`; return; }
+    if (currentUser.uid === sellerId) return;
+
+    const btn = document.getElementById('messageSellerBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Opening…';
+
+    try {
+      const idxSnap = await get(ref(db, `userChats/${currentUser.uid}`));
+      let existingId = null;
+      if (idxSnap.exists()) {
+        const chatIds = Object.keys(idxSnap.val());
+        for (const id of chatIds) {
+          const cSnap = await get(ref(db, `chats/${id}`));
+          if (cSnap.exists() && cSnap.val().sellerId === sellerId) { existingId = id; break; }
+        }
+      }
+      if (existingId) { window.location.href = `chat.html?chatId=${existingId}`; return; }
+
+      const newRef = push(ref(db, 'chats'));
+      const chatId = newRef.key;
+      const updates = {};
+      updates[`chats/${chatId}`] = {
+        propertyId: null, buyerId: currentUser.uid, sellerId,
+        buyerName: currentUser.displayName || currentUser.email,
+        sellerName: sellerData?.displayName || 'Seller',
+        lastMessage: '', lastUpdated: Date.now(), buyerHasUnread: false, sellerHasUnread: false
+      };
+      updates[`userChats/${currentUser.uid}/${chatId}`] = true;
+      updates[`userChats/${sellerId}/${chatId}`] = true;
+      await update(ref(db), updates);
+      window.location.href = `chat.html?chatId=${chatId}`;
+    } catch (err) {
+      console.error('Failed to open chat:', err);
+      alert('Could not open the chat: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+</script>
+</body>
+</html>

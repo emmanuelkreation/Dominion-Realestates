@@ -1,0 +1,78 @@
+{
+  "rules": {
+
+    "admins": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
+
+        "role": {
+          ".validate": "newData.val() === 'buyer' || newData.val() === 'seller'"
+        },
+
+        "status": {
+          ".write": "auth != null && ( (auth.uid === $uid && !data.exists()) || root.child('admins').child(auth.uid).exists() )",
+          ".validate": "newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'rejected' || newData.val() === 'suspended'"
+        }
+      }
+    },
+
+    "properties": {
+      ".read": true,
+      "$propertyId": {
+        ".write": "auth != null && ( root.child('admins').child(auth.uid).exists() || (data.exists() && data.child('sellerId').val() === auth.uid) || (!data.exists() && newData.child('sellerId').val() === auth.uid && root.child('users').child(auth.uid).child('role').val() === 'seller' && root.child('users').child(auth.uid).child('status').val() === 'approved') )"
+      }
+    },
+
+    "chats": {
+      "$chatId": {
+        ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "auth != null && ( (!data.exists() && (newData.child('buyerId').val() === auth.uid || newData.child('sellerId').val() === auth.uid)) || data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid )"
+      }
+    },
+
+    "messages": {
+      "$chatId": {
+        ".read": "auth != null && (root.child('chats').child($chatId).child('buyerId').val() === auth.uid || root.child('chats').child($chatId).child('sellerId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+        "$messageId": {
+          ".write": "auth != null && newData.child('senderId').val() === auth.uid && (root.child('chats').child($chatId).child('buyerId').val() === auth.uid || root.child('chats').child($chatId).child('sellerId').val() === auth.uid)"
+        }
+      }
+    },
+
+    "offers": {
+      "$offerId": {
+        ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "auth != null && ( (!data.exists() && newData.child('buyerId').val() === auth.uid) || data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid )"
+      }
+    },
+
+    "transactions": {
+      "$transactionId": {
+        ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "root.child('admins').child(auth.uid).exists()"
+      }
+    },
+
+    "reviews": {
+      ".read": true,
+      "$reviewId": {
+        ".write": "auth != null && ( root.child('admins').child(auth.uid).exists() || (!data.exists() && newData.child('buyerId').val() === auth.uid && root.child('transactions').child(newData.child('transactionId').val()).child('buyerId').val() === auth.uid && root.child('transactions').child(newData.child('transactionId').val()).child('status').val() === 'completed') )"
+      }
+    },
+
+    "analyticsEvents": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$eventId": {
+        ".write": "!data.exists()"
+      }
+    }
+  }
+}

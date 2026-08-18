@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#F3F1E9; --ink-soft:#B7BDB4; --paper:#101A15; --paper-raise:#16241E;
+    --line:#2B372F; --brass:#D3B27C; --red-tint:#3A1E1B; --red:#E7897E;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center;}
+  .card{background:var(--paper-raise); border:1px solid var(--line); border-radius:20px; padding:2.6rem; width:100%; max-width:380px;}
+  .mark{font-family:var(--mono); font-size:.68rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  h1{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.5rem; margin:.5rem 0 1.6rem;}
+  .field{margin-bottom:1.1rem;}
+  .field label{display:block; font-size:.8rem; color:var(--ink-soft); margin-bottom:.4rem;}
+  .field input{width:100%; padding:.75rem .9rem; border:1.5px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); outline:none; font-family:var(--body);}
+  .field input:focus{border-color:var(--brass);}
+  .btn{width:100%; padding:.85rem; border:none; border-radius:100px; background:var(--brass); color:#241C0F; font-weight:700; cursor:pointer; margin-top:.4rem;}
+  .msg{font-size:.82rem; margin-top:1rem; padding:.65rem .9rem; border-radius:8px; background:var(--red-tint); color:var(--red); display:none;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="mark">Restricted access</div>
+    <h1>Admin sign in</h1>
+    <form id="adminForm">
+      <div class="field"><label>Email</label><input type="email" id="email" required></div>
+      <div class="field"><label>Password</label><input type="password" id="password" required></div>
+      <button type="submit" class="btn">Sign in</button>
+    </form>
+    <div class="msg" id="msg"></div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+  const msg = document.getElementById('msg');
+
+  document.getElementById('adminForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      await cred.user.getIdToken(true);
+      const adminSnap = await get(ref(db, `admins/${cred.user.uid}`));
+      if (adminSnap.exists()) {
+        window.location.href = 'admin-dashboard.html';
+      } else {
+        await signOut(auth);
+        msg.textContent = 'This account is not authorized for admin access.';
+        msg.style.display = 'block';
+      }
+    } catch (err) {
+      msg.textContent = err.message.replace('Firebase: ', '');
+      msg.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>

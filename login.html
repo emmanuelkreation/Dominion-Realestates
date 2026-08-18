@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in or sign up — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3; --red:#B3413A; --red-tint:#F6E5E3;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+    --radius:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); min-height:100vh; display:flex; flex-direction:column;}
+  a{color:inherit;}
+  .top{padding:1.4rem 2rem;}
+  .logo{display:flex; flex-direction:column; line-height:1; text-decoration:none; width:fit-content;}
+  .logo .mark{font-family:var(--mono); font-size:.66rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.3rem;}
+  .wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:1.5rem;}
+  .card{
+    background:var(--paper-raise); border:1px solid var(--line); border-radius:24px;
+    padding:2.6rem; width:100%; max-width:440px; box-shadow:0 30px 60px -30px rgba(22,36,30,.25);
+  }
+  .eyebrow{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--emerald); display:flex; align-items:center; gap:.5rem;}
+  .eyebrow::before{content:""; width:18px; height:1px; background:var(--brass);}
+  .card h1{font-family:var(--display); font-weight:500; font-size:1.7rem; margin:.6rem 0 1.6rem;}
+  .switch{display:flex; background:var(--paper); border:1px solid var(--line); border-radius:100px; padding:4px; margin-bottom:1.6rem;}
+  .switch button{flex:1; border:none; background:none; padding:.6rem; border-radius:100px; font-weight:600; font-size:.9rem; cursor:pointer; color:var(--ink-soft); transition:.2s;}
+  .switch button.active{background:var(--ink); color:var(--paper);}
+  .role-pick{display:flex; gap:.7rem; margin-bottom:1.2rem;}
+  .role-pick label{
+    flex:1; border:1.5px solid var(--line); border-radius:14px; padding:1rem .8rem; text-align:center;
+    cursor:pointer; transition:.2s; font-size:.86rem; font-weight:600;
+  }
+  .role-pick input{display:none;}
+  .role-pick label i{display:block; font-size:1.2rem; margin-bottom:.4rem; color:var(--emerald);}
+  .role-pick input:checked + label{border-color:var(--brass); background:var(--brass-tint);}
+  .field{margin-bottom:1.1rem;}
+  .field label{display:block; font-size:.82rem; font-weight:600; margin-bottom:.4rem; color:var(--ink-soft);}
+  .field input{
+    width:100%; padding:.8rem 1rem; border:1.5px solid var(--line); border-radius:12px;
+    font-family:var(--body); font-size:.95rem; outline:none; background:var(--paper); color:var(--ink);
+  }
+  .field input:focus{border-color:var(--brass);}
+  .btn{
+    width:100%; padding:.9rem; border:none; border-radius:100px; background:var(--emerald); color:#fff;
+    font-weight:700; font-size:.96rem; cursor:pointer; transition:.2s; margin-top:.4rem;
+  }
+  .btn:hover{background:var(--emerald-deep);}
+  .btn:disabled{opacity:.6; cursor:not-allowed;}
+  .divider{display:flex; align-items:center; gap:.8rem; margin:1.4rem 0; color:var(--ink-soft); font-size:.8rem;}
+  .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .btn-google{
+    width:100%; padding:.85rem; border:1.5px solid var(--line); border-radius:100px; background:var(--paper-raise);
+    color:var(--ink); font-weight:600; font-size:.9rem; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; gap:.6rem; transition:.2s;
+  }
+  .btn-google:hover{border-color:var(--brass);}
+  .msg{font-size:.84rem; margin-top:1rem; padding:.7rem 1rem; border-radius:10px; display:none;}
+  .msg.error{background:var(--red-tint); color:var(--red); display:block;}
+  .msg.info{background:var(--emerald-tint); color:var(--emerald-deep); display:block;}
+  .foot-link{text-align:center; margin-top:1.4rem; font-size:.85rem; color:var(--ink-soft);}
+  .foot-link a{color:var(--emerald); font-weight:600; text-decoration:none;}
+  .seller-note{font-size:.78rem; color:var(--ink-soft); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:.7rem .9rem; margin-bottom:1.1rem; display:none;}
+</style>
+</head>
+<body>
+
+<div class="top"><a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="eyebrow">Account access</div>
+    <h1 id="cardTitle">Welcome back</h1>
+
+    <div class="switch">
+      <button id="loginTabBtn" class="active">Log in</button>
+      <button id="signupTabBtn">Sign up</button>
+    </div>
+
+    <div id="roleSection" style="display:none;">
+      <div class="role-pick">
+        <input type="radio" name="role" id="roleBuyer" value="buyer" checked>
+        <label for="roleBuyer"><i class="fas fa-house-user"></i>Buyer / Renter</label>
+        <input type="radio" name="role" id="roleSeller" value="seller">
+        <label for="roleSeller"><i class="fas fa-key"></i>Seller / Agent</label>
+      </div>
+      <div class="seller-note" id="sellerNote">Seller accounts are reviewed by our team before you can post listings — usually within 24–48 hours.</div>
+    </div>
+
+    <form id="authForm">
+      <div class="field" id="nameField" style="display:none;">
+        <label>Full name</label>
+        <input type="text" id="displayName" placeholder="Jane Doe">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" required placeholder="you@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" required placeholder="••••••••" minlength="6">
+      </div>
+      <button type="submit" class="btn" id="submitBtn">Log in</button>
+    </form>
+
+    <div class="divider">or</div>
+    <button class="btn-google" id="googleBtn"><i class="fab fa-google"></i> Continue with Google</button>
+
+    <div class="msg" id="formMsg"></div>
+
+    <div class="foot-link" id="footLink">New here? <a href="#" id="toSignup">Create an account</a></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    GoogleAuthProvider, signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const params = new URLSearchParams(window.location.search);
+  let isSignup = params.get('signup') === 'true';
+
+  const loginTabBtn = document.getElementById('loginTabBtn');
+  const signupTabBtn = document.getElementById('signupTabBtn');
+  const roleSection = document.getElementById('roleSection');
+  const sellerNote = document.getElementById('sellerNote');
+  const nameField = document.getElementById('nameField');
+  const cardTitle = document.getElementById('cardTitle');
+  const submitBtn = document.getElementById('submitBtn');
+  const footLink = document.getElementById('footLink');
+  const formMsg = document.getElementById('formMsg');
+
+  function renderMode() {
+    loginTabBtn.classList.toggle('active', !isSignup);
+    signupTabBtn.classList.toggle('active', isSignup);
+    roleSection.style.display = isSignup ? 'block' : 'none';
+    nameField.style.display = isSignup ? 'block' : 'none';
+    cardTitle.textContent = isSignup ? 'Create your account' : 'Welcome back';
+    submitBtn.textContent = isSignup ? 'Create account' : 'Log in';
+    footLink.innerHTML = isSignup
+      ? 'Already have an account? <a href="#" id="toLogin">Log in</a>'
+      : 'New here? <a href="#" id="toSignup">Create an account</a>';
+    formMsg.className = 'msg';
+    formMsg.textContent = '';
+    attachFootLink();
+  }
+  function attachFootLink() {
+    const toSignup = document.getElementById('toSignup');
+    const toLogin = document.getElementById('toLogin');
+    if (toSignup) toSignup.addEventListener('click', (e) => { e.preventDefault(); isSignup = true; renderMode(); });
+    if (toLogin) toLogin.addEventListener('click', (e) => { e.preventDefault(); isSignup = false; renderMode(); });
+  }
+  loginTabBtn.addEventListener('click', () => { isSignup = false; renderMode(); });
+  signupTabBtn.addEventListener('click', () => { isSignup = true; renderMode(); });
+  document.querySelectorAll('input[name="role"]').forEach(r => {
+    r.addEventListener('change', () => {
+      sellerNote.style.display = document.getElementById('roleSeller').checked ? 'block' : 'none';
+    });
+  });
+  renderMode();
+
+  function showMsg(text, type) {
+    formMsg.textContent = text;
+    formMsg.className = `msg ${type}`;
+  }
+
+  async function routeAfterAuth(uid) {
+    const snap = await get(ref(db, `users/${uid}`));
+    if (!snap.exists()) { window.location.href = 'index.html'; return; }
+    const u = snap.val();
+    if (u.role === 'seller') {
+      if (u.status === 'approved') window.location.href = 'dashboard.html';
+      else window.location.href = 'pending-approval.html';
+    } else {
+      window.location.href = 'buyer-dashboard.html';
+    }
+  }
+
+  document.getElementById('authForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    try {
+      if (isSignup) {
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const name = document.getElementById('displayName').value.trim() || email.split('@')[0];
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const userRecord = {
+          email, displayName: name, role, createdAt: new Date().toISOString()
+        };
+        if (role === 'seller') userRecord.status = 'pending';
+        await set(ref(db, `users/${cred.user.uid}`), userRecord);
+        if (role === 'seller') {
+          showMsg("Account created — you're in the review queue. We'll email you once approved.", 'info');
+          setTimeout(() => window.location.href = 'pending-approval.html', 1200);
+        } else {
+          window.location.href = 'buyer-dashboard.html';
+        }
+      } else {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await routeAfterAuth(cred.user.uid);
+      }
+    } catch (err) {
+      showMsg(err.message.replace('Firebase: ', ''), 'error');
+      submitBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('googleBtn').addEventListener('click', async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const existing = await get(ref(db, `users/${result.user.uid}`));
+      if (!existing.exists()) {
+        // Google sign-in always creates a buyer account — sellers need the
+        // extra profile step, so they're directed through email signup instead.
+        await set(ref(db, `users/${result.user.uid}`), {
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email.split('@')[0],
+          role: 'buyer',
+          createdAt: new Date().toISOString()
+        });
+        window.location.href = 'buyer-dashboard.html';
+      } else {
+        await routeAfterAuth(result.user.uid);
+      }
+    } catch (err) {
+      showMsg(err.message.replace('Firebase: ', ''), 'error');
+    }
+  });
+</script>
+</body>
+</html>

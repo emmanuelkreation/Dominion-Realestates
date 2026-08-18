@@ -1,0 +1,331 @@
+<!-- CHAT_BUILD_VERSION: 5 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%; height:100dvh;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); display:flex; flex-direction:column;}
+  a{color:inherit; text-decoration:none;}
+
+  .navbar{border-bottom:1px solid var(--line); padding:.9rem 1.6rem; display:flex; justify-content:space-between; align-items:center;}
+  .logo{display:flex; flex-direction:column; line-height:1;}
+  .logo .mark{font-family:var(--mono); font-size:.62rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.15rem;}
+  .navbar a.back{font-size:.85rem; color:var(--ink-soft);}
+  .navbar a.back:hover{color:var(--ink);}
+
+  .chat-shell{flex:1; min-height:0; display:grid; grid-template-columns:300px 1fr; overflow:hidden;}
+  @media (max-width:760px){ .chat-shell{grid-template-columns:1fr;} .sidebar.hide-mobile{display:none;} .thread.hide-mobile{display:none;} }
+
+  .sidebar{border-right:1px solid var(--line); overflow-y:auto; min-height:0; background:var(--paper-raise);}
+  .sidebar h2{font-family:var(--display); font-weight:500; font-size:1.1rem; padding:1.1rem 1.2rem .6rem;}
+  .convo{display:flex; gap:.7rem; padding:.8rem 1.2rem; cursor:pointer; border-bottom:1px solid var(--line); transition:.15s;}
+  .convo:hover{background:var(--paper);}
+  .convo.active{background:var(--emerald-tint);}
+  .convo-avatar{width:38px; height:38px; border-radius:50%; background:var(--brass-tint); color:#6B4E23; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:600; flex-shrink:0;}
+  .convo-name{font-weight:700; font-size:.86rem; display:flex; justify-content:space-between; gap:.4rem;}
+  .convo-last{font-size:.78rem; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;}
+  .unread-dot{width:8px; height:8px; border-radius:50%; background:var(--brass); flex-shrink:0; margin-top:3px;}
+  .empty-sidebar{padding:2rem 1.2rem; color:var(--ink-soft); font-size:.85rem;}
+
+  .thread{display:flex; flex-direction:column; height:100%; min-height:0;}
+  .thread-header{padding:1rem 1.4rem; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:.9rem; flex-shrink:0;}
+  .thread-header img, .thread-header .ph{width:44px; height:44px; border-radius:10px; object-fit:cover; background:var(--line);}
+  .thread-header .prop-price{font-family:var(--mono); font-weight:600;}
+  .thread-header .prop-loc{font-size:.78rem; color:var(--ink-soft);}
+  .thread-header a.mobile-back{display:none; margin-right:.4rem; font-size:1.1rem;}
+  @media (max-width:760px){ .thread-header a.mobile-back{display:inline;} }
+
+  .messages{flex:1; min-height:0; overflow-y:auto; padding:1.2rem 1.4rem; display:flex; flex-direction:column; gap:.6rem;}
+  .bubble{max-width:70%; padding:.65rem 1rem; border-radius:14px; font-size:.9rem; line-height:1.45;}
+  .bubble.mine{align-self:flex-end; background:var(--emerald); color:#fff; border-bottom-right-radius:4px;}
+  .bubble.theirs{align-self:flex-start; background:var(--paper-raise); border:1px solid var(--line); border-bottom-left-radius:4px;}
+  .bubble .time{display:block; font-size:.66rem; opacity:.65; margin-top:.3rem; font-family:var(--mono);}
+
+  .composer{border-top:1px solid var(--line); padding:1rem 1.4rem; display:flex; gap:.7rem; flex-shrink:0;}
+  .composer input{flex:1; padding:.8rem 1rem; border:1.5px solid var(--line); border-radius:100px; outline:none; font-family:var(--body); background:var(--paper);}
+  .composer input:focus{border-color:var(--brass);}
+  .composer button{background:var(--emerald); color:#fff; border:none; border-radius:100px; padding:0 1.3rem; font-weight:600; cursor:pointer;}
+  .composer button:hover{background:var(--emerald-deep);}
+
+  .no-thread{flex:1; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:.9rem; text-align:center; padding:2rem;}
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a>
+  <a href="#" class="back" id="dashboardLink">← Back to dashboard</a>
+</div>
+
+<div class="chat-shell">
+  <aside class="sidebar" id="sidebar">
+    <h2>Conversations</h2>
+    <div id="convoList"><div class="empty-sidebar">Loading…</div></div>
+  </aside>
+  <main class="thread hide-mobile" id="thread">
+    <div class="no-thread" id="noThread">Select a conversation, or start one from a property page.</div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import {
+    getDatabase, ref, get, set, push, onValue, onChildAdded, query, orderByChild, equalTo, update, off
+  } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const params = new URLSearchParams(window.location.search);
+  let activeChatId = params.get('chatId');
+  let currentUser = null;
+  let currentRole = null; // 'buyer' | 'seller' relative to the active chat
+  let allChats = {};
+  let messagesListenerChatId = null;
+  let chatListenerIds = new Set(); // which chats/{id} paths we already have a live listener on
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price || 0);
+  }
+  function formatTime(ts) {
+    if (!ts) return '';
+    return new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+  }
+
+  // Mobile view toggling: only one of #sidebar / #thread is visible at a
+  // time below the 760px breakpoint. These are no-ops on desktop since the
+  // hide-mobile class only has an effect inside that media query.
+  function showThreadMobile() {
+    document.getElementById('sidebar').classList.add('hide-mobile');
+    document.getElementById('thread').classList.remove('hide-mobile');
+  }
+  function showSidebarMobile() {
+    document.getElementById('sidebar').classList.remove('hide-mobile');
+    document.getElementById('thread').classList.add('hide-mobile');
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    currentUser = user;
+    const uSnap = await get(ref(db, `users/${user.uid}`));
+    const u = uSnap.exists() ? uSnap.val() : {};
+    document.getElementById('dashboardLink').href = u.role === 'seller'
+      ? (u.status === 'approved' ? 'dashboard.html' : 'pending-approval.html')
+      : 'buyer-dashboard.html';
+    loadConversations();
+  });
+
+  // Reads the small per-user index (just chat IDs this user is part of),
+  // then attaches one live listener per chat — each individually permitted
+  // under the existing chats/$chatId rule. No broad read across the whole
+  // chats collection is ever needed.
+  function loadConversations() {
+    onValue(ref(db, `userChats/${currentUser.uid}`), (idxSnap) => {
+      const chatIds = idxSnap.exists() ? Object.keys(idxSnap.val()) : [];
+
+      // Stop listening to chats that dropped out of the index (rare).
+      chatListenerIds.forEach(id => {
+        if (!chatIds.includes(id)) {
+          off(ref(db, `chats/${id}`));
+          chatListenerIds.delete(id);
+          delete allChats[id];
+        }
+      });
+
+      chatIds.forEach(id => {
+        if (chatListenerIds.has(id)) return; // already listening
+        chatListenerIds.add(id);
+        onValue(ref(db, `chats/${id}`), (cSnap) => {
+          if (cSnap.exists()) allChats[id] = { id, ...cSnap.val() };
+          else delete allChats[id];
+          renderSidebar();
+          // Only auto-open on the first time this chat becomes available
+          // (e.g. a ?chatId= link on initial load) — see openChat()'s own
+          // guard for why re-opening on every change is unsafe.
+          if (activeChatId && allChats[activeChatId] && messagesListenerChatId !== activeChatId) {
+            openChat(activeChatId);
+          }
+        });
+      });
+
+      renderSidebar();
+    });
+  }
+
+  function renderSidebar() {
+    const list = document.getElementById('convoList');
+    const items = Object.values(allChats).sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+    if (!items.length) {
+      list.innerHTML = '<div class="empty-sidebar">No conversations yet — message a seller from any property page to start one.</div>';
+      return;
+    }
+    list.innerHTML = items.map(c => {
+      const isBuyerSide = c.buyerId === currentUser.uid;
+      const otherName = isBuyerSide ? (c.sellerName || 'Seller') : (c.buyerName || 'Buyer');
+      const unread = isBuyerSide ? c.buyerHasUnread : c.sellerHasUnread;
+      return `
+        <div class="convo ${c.id === activeChatId ? 'active' : ''}" data-id="${c.id}">
+          <div class="convo-avatar">${otherName.charAt(0).toUpperCase()}</div>
+          <div style="flex:1; min-width:0;">
+            <div class="convo-name"><span>${otherName}</span>${unread ? '<span class="unread-dot"></span>' : ''}</div>
+            <div class="convo-last">${c.lastMessage || 'Say hello…'}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    list.querySelectorAll('.convo').forEach(el => {
+      el.addEventListener('click', () => {
+        activeChatId = el.dataset.id;
+        history.replaceState(null, '', `chat.html?chatId=${activeChatId}`);
+        openChat(activeChatId);
+        renderSidebar();
+      });
+    });
+  }
+
+  async function openChat(chatId) {
+    const chat = allChats[chatId];
+    if (!chat) return;
+    // Guard set FIRST, before any async work — the update() call two lines
+    // down triggers the sidebar's live listeners to fire again immediately,
+    // and without the guard being in place before that happens, a second
+    // concurrent openChat() for the same chat can start before this one
+    // finishes, racing it for the message listener and the send handler.
+    if (messagesListenerChatId && messagesListenerChatId !== chatId) {
+      off(ref(db, `messages/${messagesListenerChatId}`));
+    }
+    if (messagesListenerChatId === chatId) { showThreadMobile(); return; } // already open or opening — ignore the retrigger
+    messagesListenerChatId = chatId;
+
+    currentRole = chat.buyerId === currentUser.uid ? 'buyer' : 'seller';
+
+    // Mark read on my side
+    update(ref(db, `chats/${chatId}`), currentRole === 'buyer' ? { buyerHasUnread: false } : { sellerHasUnread: false });
+
+    const propSnap = await get(ref(db, `properties/${chat.propertyId}`));
+    const prop = propSnap.exists() ? propSnap.val() : null;
+    const otherName = currentRole === 'buyer' ? (chat.sellerName || 'Seller') : (chat.buyerName || 'Buyer');
+
+    const thread = document.getElementById('thread');
+    thread.innerHTML = `
+      <div class="thread-header">
+        <a href="#" class="mobile-back" id="mobileBackBtn"><i class="fas fa-arrow-left"></i></a>
+        ${prop && prop.images && prop.images[0] ? `<img src="${prop.images[0]}">` : '<div class="ph"></div>'}
+        <div>
+          <div class="prop-price">${prop ? formatPrice(prop.price) : otherName}</div>
+          <div class="prop-loc">${prop ? prop.location : ''} · with ${otherName}</div>
+        </div>
+      </div>
+      <div class="messages" id="messagesList"><div style="color:var(--ink-soft); font-size:.85rem;">Loading messages…</div></div>
+      <form class="composer" id="composerForm">
+        <input type="text" id="messageInput" placeholder="Type a message…" autocomplete="off" required>
+        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+      </form>
+    `;
+
+    // Show the thread panel (and hide the sidebar) on mobile now that the
+    // thread DOM actually exists. On desktop this class has no visual
+    // effect, so it's safe to call unconditionally.
+    showThreadMobile();
+
+    document.getElementById('mobileBackBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      showSidebarMobile();
+    });
+
+    // On mobile, opening the on-screen keyboard shrinks the visual viewport
+    // without the page reflowing on its own, which can leave the composer
+    // pushed out of view below the keyboard. Nudge it back into view and
+    // keep the thread scrolled to the latest message whenever that happens.
+    const messageInputEl = document.getElementById('messageInput');
+    messageInputEl.addEventListener('focus', () => {
+      setTimeout(() => {
+        messageInputEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        const list = document.getElementById('messagesList');
+        if (list) list.scrollTop = list.scrollHeight;
+      }, 300);
+    });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const list = document.getElementById('messagesList');
+        if (list) list.scrollTop = list.scrollHeight;
+      });
+    }
+
+    // onChildAdded alone (no separate get() call) handles both cases:
+    // Firebase fires it once for every message that already exists the
+    // moment this listener attaches, then again for every new message
+    // after that — so there's no dual-snapshot dedup logic to drift out of
+    // sync, and no reliance on a plain onValue listener (which behaved
+    // unreliably here, likely a rules quirk specific to persistent 'value'
+    // subscriptions vs. one-time reads).
+    const list = document.getElementById('messagesList');
+    list.innerHTML = '<div class="no-msgs-placeholder" style="color:var(--ink-soft); font-size:.85rem;">No messages yet — say hello.</div>';
+    onChildAdded(ref(db, `messages/${chatId}`), (snap) => {
+      const m = snap.val();
+      const currentList = document.getElementById('messagesList');
+      if (!currentList) return;
+      const placeholder = currentList.querySelector('.no-msgs-placeholder');
+      if (placeholder) placeholder.remove();
+      currentList.insertAdjacentHTML('beforeend', `
+        <div class="bubble ${m.senderId === currentUser.uid ? 'mine' : 'theirs'}">
+          ${escapeHtml(m.text)}
+          <span class="time">${formatTime(m.timestamp)}</span>
+        </div>
+      `);
+      currentList.scrollTop = currentList.scrollHeight;
+    });
+
+    document.getElementById('composerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      try {
+        const newRef = push(ref(db, `messages/${chatId}`));
+        await set(newRef, { senderId: currentUser.uid, text, timestamp: Date.now() });
+        await update(ref(db, `chats/${chatId}`), {
+          lastMessage: text, lastUpdated: Date.now(),
+          [currentRole === 'buyer' ? 'sellerHasUnread' : 'buyerHasUnread']: true
+        });
+      } catch (err) {
+        console.error('Failed to send message:', err);
+        alert('Your message could not be saved: ' + err.message + '\n\nThis usually means a Firebase Realtime Database rule is blocking writes to the "messages" node.');
+      }
+    });
+  }
+</script>
+</body>
+</html>

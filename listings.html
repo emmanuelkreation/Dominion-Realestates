@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property listings — Dominion Home Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --ink:#16241E; --ink-soft:#586158; --paper:#F7F4EC; --paper-raise:#FFFFFF;
+    --line:#DAD4C4; --emerald:#2F5D4C; --emerald-deep:#1E3E32; --emerald-tint:#E4ECE6;
+    --brass:#A9814A; --brass-tint:#F1E7D3;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--body); background:var(--paper); color:var(--ink); line-height:1.55;}
+  a{color:inherit; text-decoration:none;}
+  .container{max-width:1400px; margin:0 auto; padding:0 24px;}
+
+  .navbar{position:sticky; top:0; z-index:100; background:rgba(247,244,236,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:.9rem 0;}
+  .nav-container{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;}
+  .logo{display:flex; flex-direction:column; line-height:1;}
+  .logo .mark{font-family:var(--mono); font-size:.64rem; letter-spacing:.2em; color:var(--brass); text-transform:uppercase;}
+  .logo .name{font-family:var(--display); font-style:italic; font-weight:500; font-size:1.25rem;}
+  .nav-links{display:flex; gap:1.3rem; align-items:center; flex-wrap:wrap;}
+  .nav-links a{color:var(--ink-soft); font-weight:500; font-size:.9rem;}
+  .nav-links a:hover{color:var(--ink);}
+  .btn{font-weight:600; font-size:.88rem; border-radius:100px; cursor:pointer; border:1.5px solid transparent; padding:.6rem 1.3rem; transition:.2s;}
+  .btn-primary{background:var(--emerald); color:#fff;}
+  .btn-primary:hover{background:var(--emerald-deep);}
+  .btn-outline{background:transparent; border-color:var(--ink); color:var(--ink);}
+  .btn-outline:hover{background:var(--ink); color:var(--paper);}
+
+  .listings-layout{display:flex; gap:2rem; margin:2rem 0;}
+  .filters-sidebar{width:280px; flex-shrink:0; background:var(--paper-raise); border:1px solid var(--line); border-radius:18px; padding:1.6rem; height:fit-content; position:sticky; top:90px;}
+  .filters-sidebar h3{font-family:var(--display); font-weight:500; font-size:1.15rem; margin-bottom:1.2rem;}
+  .filter-group{margin-bottom:1.3rem;}
+  .filter-group label{font-weight:600; font-size:.82rem; display:block; margin-bottom:.5rem; color:var(--ink-soft);}
+  .filter-group input, .filter-group select{width:100%; padding:.65rem .8rem; border:1.5px solid var(--line); border-radius:10px; font-family:var(--body); background:var(--paper); color:var(--ink); outline:none;}
+  .filter-group input:focus, .filter-group select:focus{border-color:var(--brass);}
+  .price-range{display:flex; gap:.5rem;}
+  .type-tabs{display:flex; gap:.4rem; margin-bottom:1.3rem; flex-wrap:wrap;}
+  .type-tabs button{flex:1; background:var(--paper); border:1.5px solid var(--line); padding:.5rem; border-radius:10px; font-size:.8rem; font-weight:600; cursor:pointer; color:var(--ink-soft);}
+  .type-tabs button.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+
+  .map-container{height:280px; border-radius:16px; overflow:hidden; margin-bottom:1.5rem; border:1px solid var(--line);}
+
+  .results-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:1.4rem; flex-wrap:wrap; gap:1rem;}
+  .results-toolbar select{padding:.55rem .8rem; border:1.5px solid var(--line); border-radius:10px; background:var(--paper-raise); font-family:var(--body); outline:none;}
+  .view-toggle{display:flex; gap:.4rem; background:var(--paper-raise); border:1px solid var(--line); border-radius:10px; padding:.3rem;}
+  .view-toggle button{background:none; border:none; padding:.45rem .8rem; border-radius:8px; cursor:pointer; color:var(--ink-soft);}
+  .view-toggle button.active{background:var(--ink); color:var(--paper);}
+
+  .property-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.6rem;}
+  .property-card{background:var(--paper-raise); border-radius:16px; overflow:hidden; border:1px solid var(--line); cursor:pointer; transition:.3s ease; position:relative;}
+  .property-card:hover{transform:translateY(-6px); box-shadow:0 22px 36px -16px rgba(22,36,30,.28);}
+  .card-img{height:200px; background-size:cover; background-position:center;}
+  .card-content{padding:1.2rem; border-top:1.5px dashed var(--line);}
+  .price{font-family:var(--mono); font-size:1.2rem; font-weight:600; display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;}
+  .address{color:var(--ink-soft); margin:.5rem 0; font-size:.84rem; display:flex; align-items:center; gap:.4rem;}
+  .address i{color:var(--brass);}
+  .features{display:flex; gap:1rem; margin:.7rem 0; font-size:.8rem; color:var(--ink-soft); font-family:var(--mono);}
+  .features i{color:var(--emerald); margin-right:.2rem;}
+  .seller-name{font-size:.76rem; color:var(--brass); margin-top:.5rem; display:flex; align-items:center; gap:.4rem;}
+  .badge{display:inline-block; background:var(--emerald-tint); padding:.3rem .9rem; border-radius:100px; font-size:.66rem; font-weight:700; color:var(--emerald-deep); text-transform:uppercase;}
+  .listing-type-badge{position:absolute; top:12px; right:12px; background:var(--ink); color:var(--paper); padding:.28rem .8rem; border-radius:4px; font-size:.66rem; font-family:var(--mono); text-transform:uppercase; z-index:2;}
+  .listing-type-badge.rent{background:var(--brass); color:#241C0F;}
+  .listing-type-badge.lease{background:var(--emerald);}
+
+  .list-view .property-grid{display:flex; flex-direction:column;}
+  .list-view .property-card{display:flex; flex-direction:row; height:180px;}
+  .list-view .card-img{width:260px; height:100%; flex-shrink:0;}
+  .list-view .card-content{flex:1; border-top:none; border-left:1.5px dashed var(--line);}
+
+  .pagination{display:flex; justify-content:center; gap:.5rem; margin:2.4rem 0; flex-wrap:wrap;}
+  .pagination button{padding:.55rem 1rem; border:1.5px solid var(--line); background:var(--paper-raise); border-radius:10px; cursor:pointer; font-family:var(--mono); font-size:.85rem;}
+  .pagination button.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+
+  footer{background:var(--ink); color:#B7BDB4; padding:2rem 0; margin-top:2rem; text-align:center; font-family:var(--mono); font-size:.8rem;}
+
+  @media (max-width:900px){ .listings-layout{flex-direction:column;} .filters-sidebar{width:100%; position:static;} }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="index.html" class="logo"><span class="mark">Est. Marketplace</span><span class="name">Dominion Home Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Listings</a>
+      <button class="btn btn-outline" id="loginNavBtn">Log in</button>
+      <button class="btn btn-primary" id="dashboardBtn" style="display:none;">Dashboard</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="listings-layout">
+    <aside class="filters-sidebar">
+      <h3>Filters</h3>
+      <div class="type-tabs" id="typeTabs">
+        <button class="active" data-type="buy">Buy</button>
+        <button data-type="rent">Rent</button>
+        <button data-type="lease">Lease</button>
+      </div>
+      <div class="filter-group"><label>Location</label><input type="text" id="filterLocation" placeholder="City, zip, neighborhood"></div>
+      <div class="filter-group"><label>Price range</label><div class="price-range"><input type="number" id="minPrice" placeholder="Min"><input type="number" id="maxPrice" placeholder="Max"></div></div>
+      <div class="filter-group"><label>Bedrooms</label><select id="bedrooms"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+      <div class="filter-group"><label>Bathrooms</label><select id="bathrooms"><option value="">Any</option><option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3</option></select></div>
+      <div class="filter-group"><label>Property type</label><select id="propertyType"><option value="">All</option><option>House</option><option>Apartment</option><option>Condo</option><option>Townhouse</option><option>Land</option></select></div>
+      <button id="applyFiltersBtn" class="btn btn-primary" style="width:100%;">Apply filters</button>
+    </aside>
+
+    <main style="flex:1;">
+      <div id="map" class="map-container"></div>
+      <div class="results-toolbar">
+        <div><strong><span id="resultCount">0</span> properties found</strong></div>
+        <select id="sortBy">
+          <option value="newest">Newest first</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+        </select>
+        <div class="view-toggle">
+          <button id="gridViewBtn" class="active"><i class="fas fa-th"></i></button>
+          <button id="listViewBtn"><i class="fas fa-list"></i></button>
+        </div>
+      </div>
+      <div id="propertyResults" class="property-grid"></div>
+      <div id="paginationControls" class="pagination"></div>
+    </main>
+  </div>
+</div>
+
+<footer>© 2026 Dominion Home Hub — a zero-commission marketplace.</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
+    authDomain: "dominioncity-30d77.firebaseapp.com",
+    databaseURL: "https://dominioncity-30d77-default-rtdb.firebaseio.com", // VERIFY against Firebase console > Realtime Database
+    projectId: "dominioncity-30d77",
+    storageBucket: "dominioncity-30d77.firebasestorage.app",
+    messagingSenderId: "792059504526",
+    appId: "1:792059504526:web:b159d1d150a727303566df",
+    measurementId: "G-Q64HSNCXGQ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const resultsContainer = document.getElementById('propertyResults');
+  const resultCountSpan = document.getElementById('resultCount');
+  const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+  const sortSelect = document.getElementById('sortBy');
+  const gridViewBtn = document.getElementById('gridViewBtn');
+  const listViewBtn = document.getElementById('listViewBtn');
+  const paginationDiv = document.getElementById('paginationControls');
+  const filterLocationInput = document.getElementById('filterLocation');
+  const minPriceInput = document.getElementById('minPrice');
+  const maxPriceInput = document.getElementById('maxPrice');
+  const bedroomsSelect = document.getElementById('bedrooms');
+  const bathroomsSelect = document.getElementById('bathrooms');
+  const propertyTypeSelect = document.getElementById('propertyType');
+  const typeTabs = document.getElementById('typeTabs');
+
+  let allProperties = [];
+  let filteredProperties = [];
+  let currentPage = 1;
+  const pageSize = 12;
+  let currentView = 'grid';
+  let map = null;
+  let markersLayer = null;
+  let currentListingType = 'buy';
+
+  function getUrlParams() {
+    const p = new URLSearchParams(window.location.search);
+    currentListingType = p.get('type') || 'buy';
+    filterLocationInput.value = p.get('location') || '';
+    if (p.get('minPrice')) minPriceInput.value = p.get('minPrice');
+    if (p.get('maxPrice')) maxPriceInput.value = p.get('maxPrice');
+    if (p.get('bedrooms')) bedroomsSelect.value = p.get('bedrooms');
+    if (p.get('propertyType')) propertyTypeSelect.value = p.get('propertyType');
+    typeTabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.type === currentListingType));
+  }
+
+  function formatPrice(price) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price); }
+  function getListingLabel(type) { return type === 'buy' ? 'For Sale' : type === 'rent' ? 'For Rent' : 'For Lease'; }
+
+  async function loadProperties() {
+    try {
+      const snap = await get(ref(db, 'properties'));
+      allProperties = [];
+      if (snap.exists()) {
+        snap.forEach(child => {
+          const v = child.val();
+          if (v.status !== 'draft') allProperties.push({ id: child.key, ...v });
+        });
+      }
+      applyFiltersAndRender();
+    } catch (error) {
+      console.error('[Dominion] Error loading properties:', error);
+      resultsContainer.innerHTML = `<div style="text-align:center; grid-column:1/-1;">Couldn't load properties (${error.message || 'unknown error'}).</div>`;
+    }
+  }
+
+  function applyFilters() {
+    let results = allProperties.filter(p => p.listingType === currentListingType);
+    const locationFilter = filterLocationInput.value.trim().toLowerCase();
+    if (locationFilter) results = results.filter(p => (p.location || '').toLowerCase().includes(locationFilter));
+    const minPrice = parseFloat(minPriceInput.value);
+    const maxPrice = parseFloat(maxPriceInput.value);
+    if (!isNaN(minPrice)) results = results.filter(p => p.price >= minPrice);
+    if (!isNaN(maxPrice)) results = results.filter(p => p.price <= maxPrice);
+    if (bedroomsSelect.value) results = results.filter(p => (p.bedrooms || 0) >= parseInt(bedroomsSelect.value));
+    if (bathroomsSelect.value) results = results.filter(p => (p.bathrooms || 0) >= parseFloat(bathroomsSelect.value));
+    if (propertyTypeSelect.value) results = results.filter(p => p.propertyType === propertyTypeSelect.value);
+    return results;
+  }
+
+  function sortProperties(list) {
+    const v = sortSelect.value;
+    const sorted = [...list];
+    if (v === 'price_asc') sorted.sort((a, b) => a.price - b.price);
+    else if (v === 'price_desc') sorted.sort((a, b) => b.price - a.price);
+    else sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return sorted;
+  }
+
+  function renderPagination(total) {
+    const totalPages = Math.ceil(total / pageSize);
+    paginationDiv.innerHTML = '';
+    if (totalPages <= 1) return;
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      if (i === currentPage) btn.classList.add('active');
+      btn.addEventListener('click', () => { currentPage = i; renderResults(); updateMapMarkers(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      paginationDiv.appendChild(btn);
+    }
+  }
+
+  function renderResults() {
+    const sorted = sortProperties(filteredProperties);
+    const start = (currentPage - 1) * pageSize;
+    const paginated = sorted.slice(start, start + pageSize);
+    resultCountSpan.textContent = filteredProperties.length;
+    resultsContainer.parentElement.className = currentView === 'list' ? 'list-view' : '';
+
+    if (!paginated.length) {
+      resultsContainer.innerHTML = '<div style="text-align:center; grid-column:1/-1; padding:2rem;">No properties match your filters.</div>';
+    } else {
+      resultsContainer.innerHTML = paginated.map(prop => {
+        const imageUrl = (prop.images && prop.images[0]) || 'https://via.placeholder.com/600x400?text=Dominion+Home';
+        const typeClass = prop.listingType === 'rent' ? 'rent' : prop.listingType === 'lease' ? 'lease' : '';
+        return `
+          <div class="property-card" data-id="${prop.id}">
+            <span class="listing-type-badge ${typeClass}">${getListingLabel(prop.listingType)}</span>
+            <div class="card-img" style="background-image: url('${imageUrl}');"></div>
+            <div class="card-content">
+              <div class="price">${formatPrice(prop.price)}</div>
+              <div class="address"><i class="fas fa-map-marker-alt"></i> ${prop.location}</div>
+              <div class="features">
+                <span><i class="fas fa-bed"></i> ${prop.bedrooms ?? '–'} beds</span>
+                <span><i class="fas fa-bath"></i> ${prop.bathrooms ?? '–'} baths</span>
+                <span><i class="fas fa-ruler-combined"></i> ${prop.area || 0} sqft</span>
+              </div>
+              <div class="seller-name"><i class="fas fa-user-circle"></i> <a href="seller-profile.html?sellerId=${prop.sellerId}">${prop.sellerName || 'Property Owner'}</a></div>
+              <span class="badge">${prop.propertyType || 'Property'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    resultsContainer.querySelectorAll('.property-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return;
+        window.location.href = `property-detail.html?id=${card.dataset.id}`;
+      });
+    });
+    renderPagination(filteredProperties.length);
+  }
+
+  function initMap() {
+    map = L.map('map').setView([39.8283, -98.5795], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap & CartoDB' }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+  }
+  function updateMapMarkers() {
+    markersLayer.clearLayers();
+    const sorted = sortProperties(filteredProperties);
+    const start = (currentPage - 1) * pageSize;
+    const paginated = sorted.slice(start, start + pageSize);
+    paginated.forEach(prop => {
+      if (prop.lat && prop.lng) {
+        const marker = L.marker([prop.lat, prop.lng]).addTo(markersLayer);
+        marker.bindPopup(`<b>${formatPrice(prop.price)}</b><br>${prop.location}<br>${prop.bedrooms ?? '–'} beds, ${prop.bathrooms ?? '–'} baths<br><small>${prop.sellerName || 'Owner'}</small>`);
+      }
+    });
+    if (paginated.length && paginated[0].lat && paginated[0].lng) map.setView([paginated[0].lat, paginated[0].lng], 10);
+  }
+
+  function applyFiltersAndRender() {
+    filteredProperties = applyFilters();
+    currentPage = 1;
+    renderResults();
+    updateMapMarkers();
+  }
+
+  applyFiltersBtn.addEventListener('click', applyFiltersAndRender);
+  sortSelect.addEventListener('change', () => { renderResults(); updateMapMarkers(); });
+  gridViewBtn.addEventListener('click', () => { currentView = 'grid'; gridViewBtn.classList.add('active'); listViewBtn.classList.remove('active'); renderResults(); });
+  listViewBtn.addEventListener('click', () => { currentView = 'list'; listViewBtn.classList.add('active'); gridViewBtn.classList.remove('active'); renderResults(); });
+  typeTabs.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      typeTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentListingType = btn.dataset.type;
+      applyFiltersAndRender();
+    });
+  });
+
+  document.getElementById('loginNavBtn').addEventListener('click', () => window.location.href = 'login.html');
+  onAuthStateChanged(auth, async (user) => {
+    const loginBtn = document.getElementById('loginNavBtn');
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    if (user) {
+      const uSnap = await get(ref(db, `users/${user.uid}`));
+      const u = uSnap.exists() ? uSnap.val() : {};
+      loginBtn.style.display = 'none';
+      dashboardBtn.style.display = 'inline-block';
+      dashboardBtn.onclick = () => { window.location.href = u.role === 'seller' ? (u.status === 'approved' ? 'dashboard.html' : 'pending-approval.html') : 'buyer-dashboard.html'; };
+    } else {
+      loginBtn.style.display = 'inline-block';
+      dashboardBtn.style.display = 'none';
+    }
+  });
+
+  getUrlParams();
+  initMap();
+  loadProperties();
+</script>
+</body>
+</html>
