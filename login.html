@@ -43,11 +43,12 @@
   .role-pick input:checked + label{border-color:var(--brass); background:var(--brass-tint);}
   .field{margin-bottom:1.1rem;}
   .field label{display:block; font-size:.82rem; font-weight:600; margin-bottom:.4rem; color:var(--ink-soft);}
-  .field input{
+  .field input, .field select{
     width:100%; padding:.8rem 1rem; border:1.5px solid var(--line); border-radius:12px;
     font-family:var(--body); font-size:.95rem; outline:none; background:var(--paper); color:var(--ink);
   }
-  .field input:focus{border-color:var(--brass);}
+  .field input:focus, .field select:focus{border-color:var(--brass);}
+  .field .hint{font-size:.74rem; color:var(--ink-soft); margin-top:.35rem;}
   .btn{
     width:100%; padding:.9rem; border:none; border-radius:100px; background:var(--emerald); color:#fff;
     font-weight:700; font-size:.96rem; cursor:pointer; transition:.2s; margin-top:.4rem;
@@ -68,6 +69,7 @@
   .foot-link{text-align:center; margin-top:1.4rem; font-size:.85rem; color:var(--ink-soft);}
   .foot-link a{color:var(--emerald); font-weight:600; text-decoration:none;}
   .seller-note{font-size:.78rem; color:var(--ink-soft); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:.7rem .9rem; margin-bottom:1.1rem; display:none;}
+  .seller-fields{display:none;}
 </style>
 </head>
 <body>
@@ -99,6 +101,29 @@
         <label>Full name</label>
         <input type="text" id="displayName" placeholder="Jane Doe">
       </div>
+
+      <!-- Seller-only fields: only shown (and only required) when signing up
+           as a seller, so admin has something real to review before
+           approving — not just a name and an email address. -->
+      <div class="seller-fields" id="sellerFields">
+        <div class="field">
+          <label>Account type</label>
+          <select id="accountType">
+            <option value="individual">Individual</option>
+            <option value="business">Registered business</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Phone number</label>
+          <input type="tel" id="phone" placeholder="e.g. 0803 123 4567">
+        </div>
+        <div class="field" id="businessRegField" style="display:none;">
+          <label>Business registration number</label>
+          <input type="text" id="businessRegNumber" placeholder="e.g. CAC / RC number">
+          <div class="hint">In Nigeria this is your CAC (RC) number. Outside Nigeria, use your local business registry number.</div>
+        </div>
+      </div>
+
       <div class="field">
         <label>Email</label>
         <input type="email" id="email" required placeholder="you@email.com">
@@ -149,10 +174,23 @@
   const roleSection = document.getElementById('roleSection');
   const sellerNote = document.getElementById('sellerNote');
   const nameField = document.getElementById('nameField');
+  const sellerFields = document.getElementById('sellerFields');
+  const businessRegField = document.getElementById('businessRegField');
   const cardTitle = document.getElementById('cardTitle');
   const submitBtn = document.getElementById('submitBtn');
   const footLink = document.getElementById('footLink');
   const formMsg = document.getElementById('formMsg');
+
+  function isSellerRoleSelected() {
+    const el = document.getElementById('roleSeller');
+    return !!(el && el.checked);
+  }
+
+  function updateSellerFieldsVisibility() {
+    const showSeller = isSignup && isSellerRoleSelected();
+    sellerFields.style.display = showSeller ? 'block' : 'none';
+    document.getElementById('phone').required = showSeller;
+  }
 
   function renderMode() {
     loginTabBtn.classList.toggle('active', !isSignup);
@@ -166,6 +204,7 @@
       : 'New here? <a href="#" id="toSignup">Create an account</a>';
     formMsg.className = 'msg';
     formMsg.textContent = '';
+    updateSellerFieldsVisibility();
     attachFootLink();
   }
   function attachFootLink() {
@@ -179,7 +218,11 @@
   document.querySelectorAll('input[name="role"]').forEach(r => {
     r.addEventListener('change', () => {
       sellerNote.style.display = document.getElementById('roleSeller').checked ? 'block' : 'none';
+      updateSellerFieldsVisibility();
     });
+  });
+  document.getElementById('accountType').addEventListener('change', (e) => {
+    businessRegField.style.display = e.target.value === 'business' ? 'block' : 'none';
   });
   renderMode();
 
@@ -202,6 +245,15 @@
 
   document.getElementById('authForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (isSignup && isSellerRoleSelected()) {
+      const phone = document.getElementById('phone').value.trim();
+      if (!phone) {
+        showMsg('Phone number is required for seller accounts.', 'error');
+        return;
+      }
+    }
+
     submitBtn.disabled = true;
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -213,7 +265,15 @@
         const userRecord = {
           email, displayName: name, role, createdAt: new Date().toISOString()
         };
-        if (role === 'seller') userRecord.status = 'pending';
+        if (role === 'seller') {
+          userRecord.status = 'pending';
+          userRecord.accountType = document.getElementById('accountType').value;
+          userRecord.phone = document.getElementById('phone').value.trim();
+          const regNumber = document.getElementById('businessRegNumber').value.trim();
+          if (userRecord.accountType === 'business' && regNumber) {
+            userRecord.businessRegNumber = regNumber;
+          }
+        }
         await set(ref(db, `users/${cred.user.uid}`), userRecord);
         if (role === 'seller') {
           showMsg("Account created — you're in the review queue. We'll email you once approved.", 'info');

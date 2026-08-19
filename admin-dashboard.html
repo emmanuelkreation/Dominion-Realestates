@@ -164,8 +164,8 @@
   <section class="section-panel" id="panel-pending">
   <h2 class="section">Seller approval queue</h2>
   <table>
-    <thead><tr><th>Name</th><th>Email</th><th>Applied</th><th>Actions</th></tr></thead>
-    <tbody id="pendingBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Applied</th><th>Actions</th></tr></thead>
+    <tbody id="pendingBody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
   </table>
   </section>
 
@@ -295,13 +295,17 @@
     document.getElementById('statPending').textContent = pending.length;
     document.getElementById('navCountPending').textContent = pending.length;
     if (!pending.length) {
-      pendingBody.innerHTML = '<tr class="empty-row"><td colspan="4">No sellers waiting on review.</td></tr>';
+      pendingBody.innerHTML = '<tr class="empty-row"><td colspan="6">No sellers waiting on review.</td></tr>';
       return;
     }
     pendingBody.innerHTML = pending.map(([uid, u]) => `
       <tr>
         <td>${u.displayName || '—'}</td>
         <td>${u.email || '—'}</td>
+        <td>${u.phone || '<span style="color:var(--red);">Missing</span>'}</td>
+        <td>${u.accountType === 'business'
+          ? `Business${u.businessRegNumber ? ` <span style="color:var(--ink-soft); font-family:var(--mono); font-size:.72rem;">(${u.businessRegNumber})</span>` : ' <span style="color:var(--red); font-size:.72rem;">(no reg. number)</span>'}`
+          : (u.accountType === 'individual' ? 'Individual' : '<span style="color:var(--ink-soft);">—</span>')}</td>
         <td>${formatDate(u.createdAt)}</td>
         <td class="row-actions">
           <button class="btn-approve" data-uid="${uid}" data-action="approved">Approve</button>
