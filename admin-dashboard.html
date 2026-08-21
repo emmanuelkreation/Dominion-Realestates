@@ -179,8 +179,8 @@
     <button data-filter="suspended">Suspended</button>
   </div>
   <table>
-    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody id="sellersBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="sellersBody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
   </table>
   </section>
 
@@ -276,6 +276,18 @@
     try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
     catch { return '—'; }
   }
+  function sellerPhoneCell(u) {
+    return u.phone || '<span style="color:var(--red);">Missing</span>';
+  }
+  function sellerTypeCell(u) {
+    if (u.accountType === 'business') {
+      return u.businessRegNumber
+        ? `Business <span style="color:var(--ink-soft); font-family:var(--mono); font-size:.72rem;">(${u.businessRegNumber})</span>`
+        : `Business <span style="color:var(--red); font-size:.72rem;">(no reg. number)</span>`;
+    }
+    if (u.accountType === 'individual') return 'Individual';
+    return '<span style="color:var(--ink-soft);">—</span>';
+  }
   function formatTime(ts) {
     if (!ts) return '';
     return new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -302,10 +314,8 @@
       <tr>
         <td>${u.displayName || '—'}</td>
         <td>${u.email || '—'}</td>
-        <td>${u.phone || '<span style="color:var(--red);">Missing</span>'}</td>
-        <td>${u.accountType === 'business'
-          ? `Business${u.businessRegNumber ? ` <span style="color:var(--ink-soft); font-family:var(--mono); font-size:.72rem;">(${u.businessRegNumber})</span>` : ' <span style="color:var(--red); font-size:.72rem;">(no reg. number)</span>'}`
-          : (u.accountType === 'individual' ? 'Individual' : '<span style="color:var(--ink-soft);">—</span>')}</td>
+        <td>${sellerPhoneCell(u)}</td>
+        <td>${sellerTypeCell(u)}</td>
         <td>${formatDate(u.createdAt)}</td>
         <td class="row-actions">
           <button class="btn-approve" data-uid="${uid}" data-action="approved">Approve</button>
@@ -329,13 +339,15 @@
     document.getElementById('navCountSellers').textContent = sellers.length;
     if (sellerFilter !== 'all') sellers = sellers.filter(([, u]) => u.status === sellerFilter);
     if (!sellers.length) {
-      sellersBody.innerHTML = '<tr class="empty-row"><td colspan="4">No sellers in this category.</td></tr>';
+      sellersBody.innerHTML = '<tr class="empty-row"><td colspan="6">No sellers in this category.</td></tr>';
       return;
     }
     sellersBody.innerHTML = sellers.map(([uid, u]) => `
       <tr>
         <td>${u.displayName || '—'}</td>
         <td>${u.email || '—'}</td>
+        <td>${sellerPhoneCell(u)}</td>
+        <td>${sellerTypeCell(u)}</td>
         <td><span class="pill ${u.status}">${u.status}</span></td>
         <td class="row-actions">
           ${u.status === 'approved' ? `<button class="btn-suspend" data-uid="${uid}" data-action="suspended">Suspend</button>` : ''}
