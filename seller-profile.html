@@ -54,6 +54,21 @@
   .profile-actions{margin-left:auto; display:flex; gap:.7rem; padding-bottom:.3rem;}
 
   .about-block{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.6rem; margin-bottom:2.4rem; color:var(--ink-soft); line-height:1.75; white-space:pre-line;}
+  .owner-block{
+    background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.6rem;
+    margin-bottom:2.4rem; display:flex; gap:1.4rem; align-items:flex-start; flex-wrap:wrap;
+  }
+  .owner-photo{
+    width:88px; height:88px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--emerald-tint);
+  }
+  .owner-photo-fallback{
+    width:88px; height:88px; border-radius:50%; background:var(--brass-tint); color:#6B4E23;
+    display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:600; font-size:1.8rem; flex-shrink:0;
+  }
+  .owner-info{flex:1; min-width:200px;}
+  .owner-info .owner-name{font-family:var(--display); font-weight:500; font-size:1.15rem;}
+  .owner-info .owner-title{font-size:.8rem; color:var(--brass); font-family:var(--mono); margin:.2rem 0 .8rem;}
+  .owner-info .owner-bio{color:var(--ink-soft); line-height:1.75; white-space:pre-line;}
 
   .stats-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:2.4rem;}
   .stat{background:var(--paper-raise); border:1px solid var(--line); border-radius:16px; padding:1.2rem; text-align:center;}

@@ -97,13 +97,7 @@
 
   .empty{color:var(--ink-soft); font-size:.9rem; padding:2rem 0; text-align:center;}
 
-  /* Profile */
-  .profile-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:18px; padding:1.8rem; max-width:520px;}
-  .msg{font-size:.83rem; padding:.6rem .9rem; border-radius:8px; margin-top:1rem; display:none;}
-  .msg.info{background:var(--emerald-tint); color:var(--emerald-deep); display:block;}
-  .msg.error{background:var(--red-tint); color:var(--red); display:block;}
-
-  /* Username / handle picker */
+  /* Public profile handle */
   .handle-row{display:flex; gap:.6rem; align-items:flex-start;}
   .handle-row .field{flex:1; margin-bottom:0;}
   .handle-status{font-size:.78rem; margin-top:.4rem; min-height:1.1em;}
@@ -117,6 +111,12 @@
   .handle-preview a{color:var(--emerald-deep); word-break:break-all;}
   .copy-btn{background:none; border:1px solid var(--line); border-radius:8px; padding:.3rem .6rem; cursor:pointer; font-size:.75rem; flex-shrink:0;}
   .copy-btn:hover{border-color:var(--brass);}
+
+  /* Profile */
+  .profile-card{background:var(--paper-raise); border:1px solid var(--line); border-radius:18px; padding:1.8rem; max-width:600px;}
+  .msg{font-size:.83rem; padding:.6rem .9rem; border-radius:8px; margin-top:1rem; display:none;}
+  .msg.info{background:var(--emerald-tint); color:var(--emerald-deep); display:block;}
+  .msg.error{background:var(--red-tint); color:var(--red); display:block;}
 
   footer{height:3rem;}
 </style>
@@ -207,16 +207,20 @@
     <div class="section-head"><h2>Profile & brand</h2></div>
     <div class="profile-card">
       <div class="field"><label>Brand / display name</label><input type="text" id="pName"></div>
+      <div class="field"><label>Logo image URL</label><input type="text" id="pLogo" placeholder="https://…"><div class="hint">Shown as your avatar on your public profile. Leave blank to use your initial instead.</div></div>
+      <div class="field"><label>Cover / background image URL</label><input type="text" id="pCover" placeholder="https://…"><div class="hint">The banner image behind your profile header.</div></div>
+      <div class="field"><label>About us</label><textarea id="pAbout" rows="4" placeholder="Tell buyers who you are, what you specialize in, how long you've been doing this…"></textarea></div>
       <div class="field"><label>Business address</label><input type="text" id="pAddress" placeholder="Street, city, state"></div>
       <div class="field"><label>Email</label><input type="email" id="pEmail" disabled></div>
       <button class="btn btn-primary" id="saveProfileBtn">Save changes</button>
+      <a href="#" class="btn btn-outline" id="viewProfileLink" target="_blank" style="margin-left:.6rem;">View public profile</a>
       <div class="msg" id="profileMsg"></div>
     </div>
 
-    <div class="profile-card" style="margin-top:1.4rem;">
+    <div class="profile-card" style="margin-top:1.6rem;">
       <div class="field" style="margin-bottom:.5rem;"><label>Public profile handle</label></div>
       <p style="font-size:.82rem; color:var(--ink-soft); margin-bottom:1rem;">
-        Pick a short, shareable link for your public profile — the kind of thing you'd put on a business card or social media, instead of a long ID.
+        A short, shareable link for your public profile — the kind of thing you'd put on a business card or social media, instead of a long ID.
       </p>
       <div class="handle-row">
         <div class="field">
@@ -230,6 +234,43 @@
         <button class="copy-btn" id="copyHandleBtn">Copy</button>
       </div>
     </div>
+
+    <div class="profile-card" style="margin-top:1.6rem;">
+      <div class="section-head" style="margin-bottom:1rem;"><h2 style="font-size:1.1rem;">About the owner</h2></div>
+      <p style="font-size:.82rem; color:var(--ink-soft); margin-bottom:1rem;">
+        A personal note from the founder/CEO — separate from your business "About us" above. Shown on your public profile if filled in.
+      </p>
+      <div class="field"><label>Owner / CEO name</label><input type="text" id="pCeoName" placeholder="e.g. Jane Adeyemi"></div>
+      <div class="field"><label>Title</label><input type="text" id="pCeoTitle" placeholder="e.g. Founder & CEO"></div>
+      <div class="field"><label>Photo URL</label><input type="text" id="pCeoPhoto" placeholder="https://…"><div class="hint">A headshot photo. Leave blank to hide the photo.</div></div>
+      <div class="field"><label>About the owner</label><textarea id="pCeoBio" rows="4" placeholder="A short personal note — background, why you started this, what buyers/sellers should know about working with you…"></textarea></div>
+      <button class="btn btn-primary" id="saveCeoBtn">Save owner info</button>
+      <div class="msg" id="ceoMsg"></div>
+    </div>
+
+    <div class="profile-card" id="payoutCard" style="margin-top:1.6rem;">
+      <div class="section-head" style="margin-bottom:1rem;"><h2 style="font-size:1.1rem;">Payout account</h2></div>
+
+      <div id="payoutConnected" style="display:none;">
+        <div class="msg info" style="display:block;">
+          Payouts connected — <span id="payoutAccountName"></span>, account ending in <span id="payoutLast4"></span>.
+        </div>
+        <button class="btn btn-outline btn-sm" id="reconnectPayoutBtn" style="margin-top:.8rem;">Change bank account</button>
+      </div>
+
+      <div id="payoutSetupForm">
+        <div class="field"><label>Bank</label>
+          <select id="payoutBank"><option value="">Loading banks…</option></select>
+        </div>
+        <div class="field"><label>Account number</label><input type="text" id="payoutAccountNumber" placeholder="0123456789" maxlength="10"></div>
+        <button type="button" class="btn btn-outline" id="verifyAccountBtn">Verify account</button>
+        <div id="verifiedNameRow" style="display:none; margin:.9rem 0;">
+          <div class="field"><label>Confirm this is you</label><input type="text" id="verifiedAccountName" disabled></div>
+          <button type="button" class="btn btn-primary" id="confirmPayoutBtn">Save payout account</button>
+        </div>
+        <div class="msg" id="payoutMsg"></div>
+      </div>
+    </div>
   </section>
 
   <footer></footer>
@@ -238,9 +279,10 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import {
-    getDatabase, ref, get, set, push, update, remove, onValue, query, orderByChild, equalTo
+    getDatabase, ref, get, set, push, update, remove, onValue, query, orderByChild, equalTo, off
   } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCHGtQjjyEbyGxnYEmny2CsQUBQli66784",
@@ -255,6 +297,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const auth = getAuth(app);
+  const functionsClient = getFunctions(app);
 
   let currentUser = null;
   let myListings = {};
@@ -262,6 +305,7 @@
   let myEvents = [];
   let myChats = {};
   let currentHandle = null;
+  let verifiedAccountData = null; // holds {accountNumber, bankCode, accountName} between verify and save
 
   function formatPrice(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v || 0); }
 
@@ -275,6 +319,9 @@
     currentUser = user;
     document.getElementById('brandPill').textContent = u.displayName || user.email;
     document.getElementById('pName').value = u.displayName || '';
+    document.getElementById('pLogo').value = u.logoUrl || '';
+    document.getElementById('pCover').value = u.coverImageUrl || '';
+    document.getElementById('pAbout').value = u.aboutUs || '';
     document.getElementById('pAddress').value = u.businessAddress || '';
     document.getElementById('pEmail').value = u.email || '';
     currentHandle = u.username || null;
@@ -282,6 +329,14 @@
       document.getElementById('pHandle').value = currentHandle;
       showHandlePreview(currentHandle);
     }
+    document.getElementById('viewProfileLink').href = currentHandle
+      ? `/seller/${currentHandle}`
+      : `seller-profile.html?sellerId=${user.uid}`;
+    document.getElementById('pCeoName').value = u.ceoName || '';
+    document.getElementById('pCeoTitle').value = u.ceoTitle || '';
+    document.getElementById('pCeoPhoto').value = u.ceoPhotoUrl || '';
+    document.getElementById('pCeoBio').value = u.ceoBio || '';
+    renderPayoutStatus(u);
     loadListings();
     loadOffers();
     loadEvents();
@@ -436,11 +491,23 @@
   });
 
   // ---- Offers ----
+  let offerListenerIds = new Set();
   function loadOffers() {
-    const q = query(ref(db, 'offers'), orderByChild('sellerId'), equalTo(currentUser.uid));
-    onValue(q, (snap) => {
-      myOffers = {};
-      if (snap.exists()) snap.forEach(child => { myOffers[child.key] = child.val(); });
+    onValue(ref(db, `userOffers/${currentUser.uid}`), (idxSnap) => {
+      const offerIds = idxSnap.exists() ? Object.keys(idxSnap.val()) : [];
+      offerListenerIds.forEach(id => {
+        if (!offerIds.includes(id)) { off(ref(db, `offers/${id}`)); offerListenerIds.delete(id); delete myOffers[id]; }
+      });
+      offerIds.forEach(id => {
+        if (offerListenerIds.has(id)) return;
+        offerListenerIds.add(id);
+        onValue(ref(db, `offers/${id}`), (oSnap) => {
+          if (oSnap.exists()) myOffers[id] = oSnap.val();
+          else delete myOffers[id];
+          renderOffers();
+          renderOverview();
+        });
+      });
       renderOffers();
       renderOverview();
     });
@@ -500,10 +567,22 @@
   }
 
   // ---- Chats (for unread count only) ----
+  let chatListenerIdsD = new Set();
   function loadChatsUnread() {
-    const q = query(ref(db, 'chats'), orderByChild('sellerId'), equalTo(currentUser.uid));
-    onValue(q, (snap) => {
-      myChats = snap.exists() ? snap.val() : {};
+    onValue(ref(db, `userChats/${currentUser.uid}`), (idxSnap) => {
+      const chatIds = idxSnap.exists() ? Object.keys(idxSnap.val()) : [];
+      chatListenerIdsD.forEach(id => {
+        if (!chatIds.includes(id)) { off(ref(db, `chats/${id}`)); chatListenerIdsD.delete(id); delete myChats[id]; }
+      });
+      chatIds.forEach(id => {
+        if (chatListenerIdsD.has(id)) return;
+        chatListenerIdsD.add(id);
+        onValue(ref(db, `chats/${id}`), (cSnap) => {
+          if (cSnap.exists()) myChats[id] = cSnap.val();
+          else delete myChats[id];
+          renderOverview();
+        });
+      });
       renderOverview();
     });
   }
@@ -530,6 +609,9 @@
     try {
       await update(ref(db, `users/${currentUser.uid}`), {
         displayName: document.getElementById('pName').value.trim(),
+        logoUrl: document.getElementById('pLogo').value.trim(),
+        coverImageUrl: document.getElementById('pCover').value.trim(),
+        aboutUs: document.getElementById('pAbout').value.trim(),
         businessAddress: document.getElementById('pAddress').value.trim()
       });
       document.getElementById('brandPill').textContent = document.getElementById('pName').value.trim();
@@ -538,6 +620,24 @@
     } catch (err) {
       profileMsg.className = 'msg error';
       profileMsg.textContent = err.message.replace('Firebase: ', '');
+    }
+  });
+
+  // ---- About the owner / CEO ----
+  document.getElementById('saveCeoBtn').addEventListener('click', async () => {
+    const ceoMsg = document.getElementById('ceoMsg');
+    try {
+      await update(ref(db, `users/${currentUser.uid}`), {
+        ceoName: document.getElementById('pCeoName').value.trim(),
+        ceoTitle: document.getElementById('pCeoTitle').value.trim(),
+        ceoPhotoUrl: document.getElementById('pCeoPhoto').value.trim(),
+        ceoBio: document.getElementById('pCeoBio').value.trim()
+      });
+      ceoMsg.className = 'msg info';
+      ceoMsg.textContent = 'Owner info saved.';
+    } catch (err) {
+      ceoMsg.className = 'msg error';
+      ceoMsg.textContent = err.message.replace('Firebase: ', '');
     }
   });
 
@@ -615,8 +715,9 @@
       handleStatus.textContent = 'Saved!';
       handleStatus.className = 'handle-status ok';
       showHandlePreview(newHandle);
+      document.getElementById('viewProfileLink').href = `/seller/${newHandle}`;
     } catch (err) {
-      handleStatus.textContent = 'Could not save: ' + err.message;
+      handleStatus.textContent = 'Could not save: ' + err.message + ' — if this says permission_denied, make sure the "usernames" rules have been published in the Firebase console.';
       handleStatus.className = 'handle-status taken';
     } finally {
       saveHandleBtn.disabled = false;
@@ -632,6 +733,85 @@
       btn.textContent = 'Copied!';
       setTimeout(() => { btn.textContent = original; }, 1500);
     });
+  });
+
+  // ---- Payout account (Paystack) ----
+  function renderPayoutStatus(u) {
+    const connectedBlock = document.getElementById('payoutConnected');
+    const setupForm = document.getElementById('payoutSetupForm');
+    if (u.paystackSubaccountCode) {
+      connectedBlock.style.display = 'block';
+      setupForm.style.display = 'none';
+      document.getElementById('payoutAccountName').textContent = u.paystackAccountName || '—';
+      document.getElementById('payoutLast4').textContent = u.paystackAccountNumberLast4 || '····';
+    } else {
+      connectedBlock.style.display = 'none';
+      setupForm.style.display = 'block';
+      loadBanks();
+    }
+  }
+
+  document.getElementById('reconnectPayoutBtn').addEventListener('click', () => {
+    document.getElementById('payoutConnected').style.display = 'none';
+    document.getElementById('payoutSetupForm').style.display = 'block';
+    loadBanks();
+  });
+
+  let banksLoaded = false;
+  async function loadBanks() {
+    if (banksLoaded) return;
+    const select = document.getElementById('payoutBank');
+    try {
+      const listBanks = httpsCallable(functionsClient, 'listBanks');
+      const result = await listBanks();
+      select.innerHTML = '<option value="">Select your bank</option>' +
+        result.data.banks.map(b => `<option value="${b.code}">${b.name}</option>`).join('');
+      banksLoaded = true;
+    } catch (err) {
+      select.innerHTML = '<option value="">Could not load banks — try again shortly</option>';
+      console.error('[Dominion] listBanks failed (payment functions may not be deployed yet):', err);
+    }
+  }
+
+  document.getElementById('verifyAccountBtn').addEventListener('click', async () => {
+    const payoutMsg = document.getElementById('payoutMsg');
+    const bankCode = document.getElementById('payoutBank').value;
+    const accountNumber = document.getElementById('payoutAccountNumber').value.trim();
+    if (!bankCode || accountNumber.length < 10) {
+      payoutMsg.className = 'msg error';
+      payoutMsg.textContent = 'Pick a bank and enter a valid 10-digit account number.';
+      return;
+    }
+    payoutMsg.className = 'msg';
+    payoutMsg.textContent = '';
+    try {
+      const resolveBankAccount = httpsCallable(functionsClient, 'resolveBankAccount');
+      const result = await resolveBankAccount({ accountNumber, bankCode });
+      verifiedAccountData = { accountNumber, bankCode, accountName: result.data.accountName };
+      document.getElementById('verifiedAccountName').value = result.data.accountName;
+      document.getElementById('verifiedNameRow').style.display = 'block';
+    } catch (err) {
+      payoutMsg.className = 'msg error';
+      payoutMsg.textContent = err.message || 'Could not verify this account. Double-check the number and bank.';
+    }
+  });
+
+  document.getElementById('confirmPayoutBtn').addEventListener('click', async () => {
+    const payoutMsg = document.getElementById('payoutMsg');
+    if (!verifiedAccountData) return;
+    payoutMsg.className = 'msg';
+    payoutMsg.textContent = 'Connecting…';
+    try {
+      const createSellerSubaccount = httpsCallable(functionsClient, 'createSellerSubaccount');
+      await createSellerSubaccount(verifiedAccountData);
+      const uSnap = await get(ref(db, `users/${currentUser.uid}`));
+      renderPayoutStatus(uSnap.val());
+      payoutMsg.className = 'msg info';
+      payoutMsg.textContent = 'Payout account connected.';
+    } catch (err) {
+      payoutMsg.className = 'msg error';
+      payoutMsg.textContent = err.message || 'Could not connect this account.';
+    }
   });
 </script>
 </body>
