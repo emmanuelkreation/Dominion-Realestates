@@ -147,7 +147,8 @@
   const auth = getAuth(app);
 
   const params = new URLSearchParams(window.location.search);
-  const sellerId = params.get('sellerId');
+  let sellerId = params.get('sellerId');
+  const usernameParam = params.get('username');
   let currentUser = null;
   let sellerData = null;
 
@@ -156,11 +157,23 @@
 
   onAuthStateChanged(auth, (user) => { currentUser = user; });
 
-  if (!sellerId) {
-    document.getElementById('profileHeader').innerHTML = '<p>No seller specified.</p>';
-  } else {
-    loadSeller();
+  // Two ways to land here: the direct ?sellerId=<uid> link used internally
+  // across the site, or a pretty ?username=<handle> link (rewritten from
+  // /seller/<handle> by the Netlify redirect) that a seller shares
+  // externally. Only one lookup is needed to resolve the handle to a uid —
+  // everything after this point works exactly as it did before.
+  async function init() {
+    if (!sellerId && usernameParam) {
+      const handleSnap = await get(ref(db, `usernames/${usernameParam.trim().toLowerCase()}`));
+      if (handleSnap.exists()) sellerId = handleSnap.val();
+    }
+    if (!sellerId) {
+      document.getElementById('profileHeader').innerHTML = '<p>No seller specified.</p>';
+    } else {
+      loadSeller();
+    }
   }
+  init();
 
   async function loadSeller() {
     const uSnap = await get(ref(db, `users/${sellerId}`));
