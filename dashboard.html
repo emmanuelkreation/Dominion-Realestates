@@ -312,6 +312,7 @@
   // ---- Auth gate ----
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = 'login.html'; return; }
+    await user.getIdToken(true); // force-refresh so the DB connection has a valid token before the first read/write
     const uSnap = await get(ref(db, `users/${user.uid}`));
     if (!uSnap.exists() || uSnap.val().role !== 'seller') { window.location.href = 'buyer-dashboard.html'; return; }
     const u = uSnap.val();
@@ -701,6 +702,7 @@
       // Double-check availability right before writing, since another
       // seller could have claimed it in the time since the debounce fired.
       const snap = await get(ref(db, `usernames/${newHandle}`));
+      console.log('[Dominion] handle availability check:', { newHandle, exists: snap.exists(), owner: snap.exists() ? snap.val() : null, myUid: currentUser.uid });
       if (snap.exists() && snap.val() !== currentUser.uid) {
         handleStatus.textContent = 'That handle was just taken by someone else — try another.';
         handleStatus.className = 'handle-status taken';
@@ -710,6 +712,7 @@
       updates[`usernames/${newHandle}`] = currentUser.uid;
       if (currentHandle && currentHandle !== newHandle) updates[`usernames/${currentHandle}`] = null;
       updates[`users/${currentUser.uid}/username`] = newHandle;
+      console.log('[Dominion] attempting handle save. currentHandle:', currentHandle, '| updates:', JSON.stringify(updates));
       await update(ref(db), updates);
       currentHandle = newHandle;
       handleStatus.textContent = 'Saved!';
@@ -717,7 +720,8 @@
       showHandlePreview(newHandle);
       document.getElementById('viewProfileLink').href = `/seller/${newHandle}`;
     } catch (err) {
-      handleStatus.textContent = 'Could not save: ' + err.message + ' — if this says permission_denied, make sure the "usernames" rules have been published in the Firebase console.';
+      console.error('[Dominion] handle save failed. Full error:', err, '| code:', err.code, '| message:', err.message);
+      handleStatus.textContent = 'Could not save: ' + err.message + ' — check the browser console for full details.';
       handleStatus.className = 'handle-status taken';
     } finally {
       saveHandleBtn.disabled = false;
