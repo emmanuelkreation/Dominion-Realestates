@@ -127,6 +127,16 @@
 
   <div class="about-block" id="aboutBlock" style="display:none;"></div>
 
+  <div class="owner-block" id="ownerBlock" style="display:none;">
+    <img class="owner-photo" id="ownerPhoto" style="display:none;" alt="">
+    <div class="owner-photo-fallback" id="ownerPhotoFallback" style="display:none;"></div>
+    <div class="owner-info">
+      <div class="owner-name" id="ownerName"></div>
+      <div class="owner-title" id="ownerTitle"></div>
+      <div class="owner-bio" id="ownerBio"></div>
+    </div>
+  </div>
+
   <div class="stats-row">
     <div class="stat"><div class="num" id="statListings">–</div><div class="lab">Active listings</div></div>
     <div class="stat"><div class="num" id="statRating">–</div><div class="lab">Average rating</div></div>
@@ -213,6 +223,21 @@
       const aboutEl = document.getElementById('aboutBlock');
       aboutEl.style.display = 'block';
       aboutEl.textContent = sellerData.aboutUs;
+    }
+    if (sellerData.ceoName || sellerData.ceoBio) {
+      document.getElementById('ownerBlock').style.display = 'flex';
+      document.getElementById('ownerName').textContent = sellerData.ceoName || 'Owner';
+      document.getElementById('ownerTitle').textContent = sellerData.ceoTitle || '';
+      document.getElementById('ownerBio').textContent = sellerData.ceoBio || '';
+      if (sellerData.ceoPhotoUrl && /^https?:\/\//.test(sellerData.ceoPhotoUrl)) {
+        const photo = document.getElementById('ownerPhoto');
+        photo.src = sellerData.ceoPhotoUrl;
+        photo.style.display = 'block';
+      } else {
+        const fallback = document.getElementById('ownerPhotoFallback');
+        fallback.textContent = (sellerData.ceoName || 'O').charAt(0).toUpperCase();
+        fallback.style.display = 'flex';
+      }
     }
     document.getElementById('sellerName').textContent = sellerData.displayName || 'Property owner';
     if (sellerData.businessAddress) {
