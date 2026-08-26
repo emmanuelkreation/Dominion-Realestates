@@ -193,7 +193,7 @@
       if (handleSnap.exists()) sellerId = handleSnap.val();
     }
     if (!sellerId) {
-      document.getElementById('profileHeader').innerHTML = '<p>No seller specified.</p>';
+      document.getElementById('profileHeader').innerHTML = '<p>This seller link isn\'t valid or the profile could not be found.</p>';
     } else {
       loadSeller();
     }
@@ -318,7 +318,12 @@
   // userChats index, fetch each by ID (individually permitted under the
   // existing chats/$chatId rule), and write the same index entries when
   // creating a new chat so it's discoverable by chat.html afterward.
-  document.getElementById('messageSellerBtn').addEventListener('click', async () => {
+  //
+  // Guarded with ?. because #messageSellerBtn is inside #profileHeader,
+  // which gets replaced with an error message above when no seller could
+  // be resolved — without the guard, this line would throw trying to
+  // attach a listener to an element that no longer exists.
+  document.getElementById('messageSellerBtn')?.addEventListener('click', async () => {
     if (!currentUser) { window.location.href = `login.html?redirect=seller-profile.html?sellerId=${sellerId}`; return; }
     if (currentUser.uid === sellerId) return;
 
