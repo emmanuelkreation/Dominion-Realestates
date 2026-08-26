@@ -188,8 +188,12 @@
   // externally. Only one lookup is needed to resolve the handle to a uid —
   // everything after this point works exactly as it did before.
   async function init() {
+    console.log('[Dominion] seller-profile loaded. Full URL:', window.location.href, '| sellerId param:', sellerId, '| username param:', usernameParam);
     if (!sellerId && usernameParam) {
-      const handleSnap = await get(ref(db, `usernames/${usernameParam.trim().toLowerCase()}`));
+      const lookupKey = usernameParam.trim().toLowerCase();
+      console.log('[Dominion] looking up usernames/' + lookupKey);
+      const handleSnap = await get(ref(db, `usernames/${lookupKey}`));
+      console.log('[Dominion] lookup result — exists:', handleSnap.exists(), '| value:', handleSnap.exists() ? handleSnap.val() : null);
       if (handleSnap.exists()) sellerId = handleSnap.val();
     }
     if (!sellerId) {
