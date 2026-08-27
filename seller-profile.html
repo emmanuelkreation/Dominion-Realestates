@@ -173,7 +173,20 @@
 
   const params = new URLSearchParams(window.location.search);
   let sellerId = params.get('sellerId');
-  const usernameParam = params.get('username');
+  let usernameParam = params.get('username');
+
+  // Pretty links (/seller/<handle>) are served through a Netlify rewrite
+  // (a 200 rule in _redirects), which means the browser's address bar
+  // — and therefore window.location — NEVER shows the rewritten target
+  // URL or its query string. The browser only ever sees the URL it
+  // actually requested: /seller/<handle>, with no query string at all.
+  // So ?username=... from the rewrite is invisible to this script; the
+  // handle has to be read directly out of the path instead.
+  if (!sellerId && !usernameParam) {
+    const pathMatch = window.location.pathname.match(/^\/seller\/([^/]+)\/?$/i);
+    if (pathMatch) usernameParam = decodeURIComponent(pathMatch[1]);
+  }
+
   let currentUser = null;
   let sellerData = null;
 
@@ -182,18 +195,12 @@
 
   onAuthStateChanged(auth, (user) => { currentUser = user; });
 
-  // Two ways to land here: the direct ?sellerId=<uid> link used internally
-  // across the site, or a pretty ?username=<handle> link (rewritten from
-  // /seller/<handle> by the Netlify redirect) that a seller shares
-  // externally. Only one lookup is needed to resolve the handle to a uid —
-  // everything after this point works exactly as it did before.
   async function init() {
-    console.log('[Dominion] seller-profile loaded. Full URL:', window.location.href, '| sellerId param:', sellerId, '| username param:', usernameParam);
+    console.log('[Dominion] seller-profile loaded. pathname:', window.location.pathname, '| sellerId param:', sellerId, '| username (resolved from path or query):', usernameParam);
     if (!sellerId && usernameParam) {
       const lookupKey = usernameParam.trim().toLowerCase();
-      console.log('[Dominion] looking up usernames/' + lookupKey);
       const handleSnap = await get(ref(db, `usernames/${lookupKey}`));
-      console.log('[Dominion] lookup result — exists:', handleSnap.exists(), '| value:', handleSnap.exists() ? handleSnap.val() : null);
+      console.log('[Dominion] lookup usernames/' + lookupKey + ' — exists:', handleSnap.exists(), '| value:', handleSnap.exists() ? handleSnap.val() : null);
       if (handleSnap.exists()) sellerId = handleSnap.val();
     }
     if (!sellerId) {
